@@ -1,7 +1,13 @@
 import unittest
+from datetime import datetime, date
+
+import dateutil
+import jdatetime
 
 from app.core import mongoengine_api
+from app.core.database import get_db
 from app.core.models.done_trades import DoneTrade
+from app.core.models.score_time_series import ScoreTimeSeries
 from app.core.services import general_data_service as gs
 from app.core.services.util import get_random_digits_str
 
@@ -42,3 +48,39 @@ class TestImportRandomBulkData(unittest.TestCase):
             dt.total_delay_days = get_random_digits_str(2)
             gs.save_document(dt)
             print("flowing document is saved: ", dt.to_json())
+
+    def test_import_score_time_series_bulk_data(self):
+        db = get_db()
+        db.scoreTimeSeries.delete_many({})
+        score = 330
+        for i in range(365):
+            d = jdatetime.timedelta(days=365-i)
+            score_date = datetime.today().__sub__(d)
+            # score_date = dateutil.parser.parse(score_date.isoformat())
+            if i <= 30:
+                score += 1
+            elif i <= 50:
+                score -= 1
+            elif i <= 80:
+                score += 1
+            elif i <= 99:
+                score = score
+            elif i <= 115:
+                score = score
+            elif i <= 140:
+                score += 1
+            elif i <= 160:
+                score -= 1
+            elif i <= 190:
+                score = score
+            elif i <= 260:
+                score += 1
+            elif i <= 285:
+                score = score
+            elif i <= 325:
+                score -= 1
+            elif i <= 365:
+                score += 1
+            db.scoreTimeSeries.insert_one(dict(ScoreTimeSeries(user_id=1, score_date=score_date, score=score)))
+            print('ScoreTimeSeries(user_id:{}, score_date:{}, score:{}) is inserted.'.format(1, score_date, score))
+

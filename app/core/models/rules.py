@@ -10,6 +10,8 @@ class Rule(BaseModel):
     score: int = Field(None)
     min: float = Field(None)
     max: float = Field(None)
+    pos_change_reason: str = Field(None)  # positive change reason
+    neg_change_reason: str = Field(None)  # negative change reason
 
     # parameterized constructor
     # def __init__(self, level, code: str, title: str, impact_percent: float, score: int = None, min_val: float = None, max_val: float = None):

@@ -1,25 +1,31 @@
 import random
 import string
-from datetime import datetime
+from datetime import datetime, timedelta
+from typing import List
 
+import jdatetime
 from mongoengine.queryset.visitor import Q
 
-from app.core.constants import score_deliminator, NORMALIZATION_MAX_SCORE, ONE_HUNDRED, SCORE, CODE, MAX, YEARS, ZERO, DAYS, MONTHS, ONE
+from app.core.constants import score_deliminator, NORMALIZATION_MAX_SCORE, ONE_HUNDRED, SCORE, CODE, MAX, YEARS, ZERO, \
+    DAYS, MONTHS, ONE
 from app.core.models.cheques import Cheque
 from app.core.models.dtos.cheque_status_dto import ChequesStatusDTO
 from app.core.models.dtos.loan_status_dto import LoansStatusDTO
-from app.core.models.dtos.score_changes_dto import ScoreChangesDTO
+from app.core.models.dtos.score_change_dto import ScoreChangeDTO
 from app.core.models.dtos.score_details_dto import ScoreDetailsDTO
 from app.core.models.dtos.score_status_dto import ScoreStatusDTO
 from app.core.models.dtos.vosouq_status_dto import VosouqStatusDTO
 from app.core.models.loans import Loan
 from app.core.models.profile import Profile
 from app.core.models.rules import Rule
-# noinspection DuplicatedCode
 from app.core.models.score_changes import ScoreChange
+# noinspection DuplicatedCode
+from app.core.models.score_changes_reasons import ScoreChangeReason
 
 
-def create_new_rule(level, parent: str, code: str, title: str, impact_percent: float, score: int = None, min_val: float = None, max_val: float = None):
+# noinspection DuplicatedCode
+def create_new_rule(level, parent: str, code: str, title: str, impact_percent: float, score: int = None,
+                    min_val: float = None, max_val: float = None):
     rule = Rule()
     rule.level = level
     rule.parent = parent
@@ -30,6 +36,15 @@ def create_new_rule(level, parent: str, code: str, title: str, impact_percent: f
     rule.min = min_val
     rule.max = min_val if max_val is None else max_val
     return rule
+
+
+def create_new_score_change_reason(rule_master_code: str, rule_codes: List[str], positive_reason: str, negative_reason: str = None):
+    scr = ScoreChangeReason()
+    scr.rule_master_code = rule_master_code
+    scr.rule_codes = rule_codes
+    scr.positive_reason = positive_reason
+    scr.negative_reason = negative_reason
+    return scr
 
 
 def create_score_status_dto(score: int, score_gauges: list, last_score_change: int, last_update_date: datetime):
@@ -72,14 +87,18 @@ def create_loan_status_dto(ln: Loan) -> LoansStatusDTO:
 
 def create_cheque_status_dto(ch: Cheque) -> ChequesStatusDTO:
     csd = ChequesStatusDTO()
-    csd.unfixed_returned_cheques_count_of_last_3_months = get_not_none_value(ch.unfixed_returned_cheques_count_of_last_3_months,
-                                                                             csd.unfixed_returned_cheques_count_of_last_3_months)
-    csd.unfixed_returned_cheques_count_between_last_3_to_12_months = get_not_none_value(ch.unfixed_returned_cheques_count_between_last_3_to_12_months,
-                                                                                        csd.unfixed_returned_cheques_count_between_last_3_to_12_months)
-    csd.unfixed_returned_cheques_count_of_more_12_months = get_not_none_value(ch.unfixed_returned_cheques_count_of_more_12_months,
-                                                                              csd.unfixed_returned_cheques_count_of_more_12_months)
-    csd.unfixed_returned_cheques_count_of_last_5_years = get_not_none_value(ch.unfixed_returned_cheques_count_of_last_5_years,
-                                                                            csd.unfixed_returned_cheques_count_of_last_5_years)
+    csd.unfixed_returned_cheques_count_of_last_3_months = get_not_none_value(
+        ch.unfixed_returned_cheques_count_of_last_3_months,
+        csd.unfixed_returned_cheques_count_of_last_3_months)
+    csd.unfixed_returned_cheques_count_between_last_3_to_12_months = get_not_none_value(
+        ch.unfixed_returned_cheques_count_between_last_3_to_12_months,
+        csd.unfixed_returned_cheques_count_between_last_3_to_12_months)
+    csd.unfixed_returned_cheques_count_of_more_12_months = get_not_none_value(
+        ch.unfixed_returned_cheques_count_of_more_12_months,
+        csd.unfixed_returned_cheques_count_of_more_12_months)
+    csd.unfixed_returned_cheques_count_of_last_5_years = get_not_none_value(
+        ch.unfixed_returned_cheques_count_of_last_5_years,
+        csd.unfixed_returned_cheques_count_of_last_5_years)
     return csd
 
 
@@ -93,10 +112,10 @@ def create_score_details_dto(pf: Profile) -> ScoreDetailsDTO:
     return sdd
 
 
-def create_score_changes_dto(sch: ScoreChange) -> ScoreChangesDTO:
-    scd: ScoreChangesDTO = ScoreChangesDTO()
-    scd.title = sch.reason_desc
-    scd.date = sch.date
+def create_score_changes_dto(sch: ScoreChange) -> ScoreChangeDTO:
+    scd: ScoreChangeDTO = ScoreChangeDTO()
+    scd.change_reason = sch.reason_desc
+    scd.change_date = sch.change_date
     scd.score_change = sch.score_change
     return scd
 
@@ -122,7 +141,8 @@ def calculate_dates_diff(start: datetime, end: datetime) -> {}:
     # rm = (d.days - (yrs * 365))
 
 
-def create_new_rule2(rule: Rule, level, parent: str, code: str, title: str, impact_percent: float, score: int = None, min_val: float = None,
+def create_new_rule2(rule: Rule, level, parent: str, code: str, title: str, impact_percent: float, score: int = None,
+                     min_val: float = None,
                      max_val: float = None):
     rule.level = level
     rule.parent = parent
@@ -241,7 +261,7 @@ def get_zero_if_null(num):
 
 
 def get_first_item(lst: list):
-    if len(lst) > 0:
+    if len(lst) > ZERO:
         return lst[ZERO]
     return None
 
@@ -250,3 +270,52 @@ def get_second_item(lst: list):
     if len(lst) > 1:
         return lst[ONE]
     return None
+
+
+def get_today_date(persian: bool = False):
+    if persian:
+        return jdatetime.date.today()
+    return jdatetime.date.today().togregorian()
+
+
+def get_first_date_of_current_month(persian: bool = False):
+    td = get_today_date()
+    d = jdatetime.timedelta(days=td.day - ONE)
+    if persian:
+        return td.__sub__(d)
+    return td.__sub__(d).togregorian()
+
+
+def get_first_date_of_month_in_specified_months_ago(num_of_month_ago: int, persian: bool = False):
+    if num_of_month_ago == 1:
+        return get_first_date_of_current_month()
+
+    td = get_today_date()
+    for m in range(num_of_month_ago):
+        dlt = jdatetime.timedelta(days=td.day - ONE)
+        td = td.__sub__(dlt)
+
+    if persian:
+        return td
+    return td.togregorian()
+
+
+def get_last_date_of_previous_month(persian: bool = False):
+    td = get_today_date()
+    dlt = jdatetime.timedelta(days=td.day)
+    if persian:
+        return td.__sub__(dlt)
+    return td.__sub__(dlt).togregorian()
+
+
+def convert_date_to_milliseconds_since_epoch(date_time: datetime):
+    return int(round(date_time.timestamp() * 1000))
+
+
+if __name__ == '__main__':
+    # d = jdatetime.date(1399, 11, 30, locale=PERSIAN_LOCALE)
+    # print(d)
+    # print(d.togregorian())
+    td = datetime.today()
+    start_date = datetime.now() - timedelta(30 * 6)
+    print(start_date)

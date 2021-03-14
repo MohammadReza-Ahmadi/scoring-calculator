@@ -1,7 +1,7 @@
-
 # FastApi config
 fastapi_url = '127.0.0.1'
 fastapi_port = 8016
+service_message_code = '009'
 
 # MongoDB config
 mongodb_host = '127.0.0.1'

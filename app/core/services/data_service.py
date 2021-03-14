@@ -1,12 +1,14 @@
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from typing import List
 
+import dateutil
 from pydantic import parse_obj_as
 from pymongo.command_cursor import CommandCursor
 from pymongo.cursor import Cursor
 from pymongo.database import Database
 
-from app.core.constants import USER_ID, DAYS, MONTHS, SCORE_DISTRIBUTION_SEPARATOR, ZERO, ONE, CODE, TIMELINESS, VOLUMES, HISTORIES, IDENTITIES, ONE_HUNDRED
+from app.core.constants import USER_ID, DAYS, MONTHS, SCORE_DISTRIBUTION_SEPARATOR, ZERO, ONE, CODE, TIMELINESS, \
+    VOLUMES, HISTORIES, IDENTITIES, ONE_HUNDRED, SCORE_DATE, RULE_CODES
 from app.core.database import get_db
 from app.core.exceptions import ScoringException
 from app.core.models.cheques import Cheque
@@ -14,19 +16,23 @@ from app.core.models.done_trades import DoneTrade
 from app.core.models.dtos.cheque_status_dto import ChequesStatusDTO
 from app.core.models.dtos.loan_status_dto import LoansStatusDTO
 from app.core.models.dtos.score_boundaries_dto import ScoreBoundariesDTO
-from app.core.models.dtos.score_changes_dto import ScoreChangesDTO
+from app.core.models.dtos.score_change_dto import ScoreChangeDTO
 from app.core.models.dtos.score_details_dto import ScoreDetailsDTO
 from app.core.models.dtos.score_distribution_dto import ScoreDistributionDTO
 from app.core.models.dtos.score_status_dto import ScoreStatusDTO
+from app.core.models.dtos.score_time_series_dto import ScoreTimeSeriesDTO
 from app.core.models.dtos.vosouq_status_dto import VosouqStatusDTO
 from app.core.models.loans import Loan
 from app.core.models.profile import Profile
 from app.core.models.rules import Rule
 from app.core.models.score_changes import ScoreChange
+from app.core.models.score_changes_reasons import ScoreChangeReason
 from app.core.models.score_gauges import ScoreGauge
+from app.core.models.score_time_series import ScoreTimeSeries
 from app.core.models.undone_trades import UndoneTrade
-from app.core.services.pipelines_generator import generate_scores_distributions_pipeline
-from app.core.services.util import create_score_status_dto, create_vosouq_status_dto, calculate_dates_diff, create_loan_status_dto, create_cheque_status_dto, \
+from app.core.services.scores_distributions_pipeline_generator import generate_scores_distributions_pipeline
+from app.core.services.util import create_score_status_dto, create_vosouq_status_dto, calculate_dates_diff, \
+    create_loan_status_dto, create_cheque_status_dto, \
     get_zero_if_null, create_score_details_dto, get_second_item, create_score_changes_dto
 from app.core.settings import min_score, max_score, distribution_count
 
@@ -38,11 +44,22 @@ class DataService:
 
     # SCORE-GAUGE SERVICES ................................................
     def get_score_gauges(self) -> list:
-        sgs = self.db.scoreGauges.find()
-        return list(sgs)
+        return list(self.db.scoreGauges.find())
 
     def insert_score_gauge(self, sg: ScoreGauge):
         self.db.scoreGauges.insert_one(dict(sg))
+
+    # SCORE-TIME_SERIES SERVICES ................................................
+    # Best Model load List Service
+    def get_db_score_time_series(self, user_id: int, start_date: date, end_date: date) -> List[ScoreTimeSeries]:
+        if user_id is None:
+            raise ScoringException(3, 'user_id can not be None!')
+
+        start_date = dateutil.parser.parse(start_date.isoformat())
+        end_date = dateutil.parser.parse(end_date.isoformat())
+        ret_list = list(
+            self.db.scoreTimeSeries.find({USER_ID: user_id, SCORE_DATE: {"$gte": start_date, "$lte": end_date}}))
+        return parse_obj_as(List[ScoreTimeSeries], ret_list)
 
     # RULE SERVICES ........................................................
     def insert_rule(self, r: Rule):
@@ -77,12 +94,30 @@ class DataService:
             m_dict.__setitem__(r.code, [r.score, r.impact_percent])
         return m_dict
 
+    # ScoreChangeReason SERVICES ................................................
+    def insert_score_change_reason(self, scr: ScoreChangeReason):
+        self.db.scoreChangeReasons.insert_one(dict(scr))
+
+    def delete_score_change_reasons(self, filter_dict: {}) -> None:
+        self.db.scoreChangeReasons.delete_many(filter_dict)
+
+    def get_score_change_reason_by_rule_code(self, rule_code: str) -> ScoreChangeReason:
+        if rule_code is None:
+            raise ScoringException(2, 'rule_code is empty!')
+        dic = self.db.scoreChangeReasons.find({RULE_CODES: rule_code})
+        if dic is None:
+            return ScoreChangeReason()
+        return ScoreChangeReason.parse_obj(dic)
+
     # PROFILE SERVICES ................................................
     def insert_profile(self, p: Profile):
         if p.membership_date is not None:
             # set min time value to date filed, pydantic model does not support date without time field type
             p.membership_date = datetime.combine(p.membership_date, datetime.min.time())
         self.db.profiles.insert_one(dict(p))
+
+    def delete_profiles(self, filter_dict: {}) -> None:
+        self.db.profiles.delete_many(filter_dict)
 
     def get_profiles(self, filter_dict: {}) -> List[Profile]:
         if filter_dict is None:
@@ -100,10 +135,13 @@ class DataService:
             return Profile()
         return Profile.parse_obj(dic)
 
-    def delete_profiles(self, filter_dict: {}) -> None:
-        self.db.profiles.delete_many(filter_dict)
-
     # DONE-TRADE SERVICES ................................................
+    def insert_done_trade(self, dt: DoneTrade):
+        self.db.doneTrades.insert_one(dict(dt))
+
+    def delete_done_trades(self, filter_dict: {}) -> None:
+        self.db.doneTrades.delete_many(filter_dict)
+
     def get_done_trades(self, filter_dict: {}) -> List[DoneTrade]:
         if filter_dict is None:
             raise ScoringException(2, 'filter_dict is empty!')
@@ -121,6 +159,12 @@ class DataService:
         return DoneTrade.parse_obj(dic)
 
     # UNDONE-TRADE SERVICES ................................................
+    def insert_undone_trade(self, udt: UndoneTrade):
+        self.db.undoneTrades.insert_one(dict(udt))
+
+    def delete_undone_trades(self, filter_dict: {}) -> None:
+        self.db.undoneTrades.delete_many(filter_dict)
+
     def get_undone_trades(self, filter_dict: {}) -> List[UndoneTrade]:
         if filter_dict is None:
             raise ScoringException(2, 'filter_dict is empty!')
@@ -138,6 +182,12 @@ class DataService:
         return UndoneTrade.parse_obj(dic)
 
     # LOAN SERVICES ................................................
+    def insert_loan(self, ln: Loan):
+        self.db.loans.insert_one(dict(ln))
+
+    def delete_loans(self, filter_dict: {}) -> None:
+        self.db.loans.delete_many(filter_dict)
+
     def get_loans(self, filter_dict: {}) -> List[Loan]:
         if filter_dict is None:
             raise ScoringException(2, 'filter_dict is empty!')
@@ -155,6 +205,12 @@ class DataService:
         return Loan.parse_obj(dic)
 
     # CHEQUE SERVICES ................................................
+    def insert_cheque(self, ch: Cheque):
+        self.db.cheques.insert_one(dict(ch))
+
+    def delete_cheques(self, filter_dict: {}) -> None:
+        self.db.cheques.delete_many(filter_dict)
+
     def get_cheques(self, filter_dict: {}) -> List[Cheque]:
         if filter_dict is None:
             raise ScoringException(2, 'filter_dict is empty!')
@@ -171,14 +227,13 @@ class DataService:
             return Cheque()
         return Cheque.parse_obj(dic)
 
-    # SCORE CHANGEs SERVICES ................................................
+    # SCORE CHANGES SERVICES ................................................
     def get_user_score_changes(self, user_id: int) -> List[ScoreChange]:
         if user_id is None:
             raise ScoringException(3, 'user_id can not be None!')
-        dic = self.db.scoreChanges.find({USER_ID: user_id})
-        if dic is None or len(dic) == 0:
-            return []
-        return parse_obj_as(List[ScoreChange], dic)
+
+        ret_list = list(self.db.scoreChanges.find({USER_ID: user_id}))
+        return parse_obj_as(List[ScoreChange], ret_list)
 
     # REST SERVICES ................................................
     def get_score_boundaries(self) -> ScoreBoundariesDTO:
@@ -220,14 +275,18 @@ class DataService:
         # load doneTrade
         dt: DoneTrade = self.get_user_done_trade(user_id)
         # calc all doneTrades count
-        dt_count = get_zero_if_null(dt.timely_trades_count_of_last_3_months) + get_zero_if_null(dt.timely_trades_count_between_last_3_to_12_months) \
-                   + get_zero_if_null(dt.past_due_trades_count_of_last_3_months) + get_zero_if_null(dt.past_due_trades_count_between_last_3_to_12_months) \
-                   + get_zero_if_null(dt.arrear_trades_count_of_last_3_months) + get_zero_if_null(dt.arrear_trades_count_between_last_3_to_12_months)
+        dt_count = get_zero_if_null(dt.timely_trades_count_of_last_3_months) + get_zero_if_null(
+            dt.timely_trades_count_between_last_3_to_12_months) \
+                   + get_zero_if_null(dt.past_due_trades_count_of_last_3_months) + get_zero_if_null(
+            dt.past_due_trades_count_between_last_3_to_12_months) \
+                   + get_zero_if_null(dt.arrear_trades_count_of_last_3_months) + get_zero_if_null(
+            dt.arrear_trades_count_between_last_3_to_12_months)
         # calc delayed doneTrades count
         delay_days_avg = 0
         if dt_count > 0:
             delayed_dt_count = dt_count - (
-                    get_zero_if_null(dt.timely_trades_count_of_last_3_months) + get_zero_if_null(dt.timely_trades_count_between_last_3_to_12_months))
+                    get_zero_if_null(dt.timely_trades_count_of_last_3_months) + get_zero_if_null(
+                dt.timely_trades_count_between_last_3_to_12_months))
             # calc delayDays' avg
             delay_days_avg = dt.total_delay_days // delayed_dt_count
 
@@ -238,11 +297,13 @@ class DataService:
         # load & calc undoneTrade
         udt: UndoneTrade = self.get_user_undone_trade(user_id)
         # calc all undoneTrades count
-        udt_count = get_zero_if_null(udt.undue_trades_count) + get_zero_if_null(udt.past_due_trades_count) + get_zero_if_null(udt.arrear_trades_count)
+        udt_count = get_zero_if_null(udt.undue_trades_count) + get_zero_if_null(
+            udt.past_due_trades_count) + get_zero_if_null(udt.arrear_trades_count)
 
         # make & return VosouqStatusDTO
         return create_vosouq_status_dto(membership_duration[DAYS], membership_duration[MONTHS], dt_count,
-                                        udt_count, negative_status_count, delay_days_avg, pf.recommended_to_others_count)
+                                        udt_count, negative_status_count, delay_days_avg,
+                                        pf.recommended_to_others_count)
 
     def get_loans_status(self, user_id: int) -> LoansStatusDTO:
         if user_id is None:
@@ -269,14 +330,27 @@ class DataService:
         score_distro_dtos: [ScoreDistributionDTO] = []
         for k in score_distro_dict.keys():
             score_range: [] = k.split(SCORE_DISTRIBUTION_SEPARATOR)
-            score_distro_dtos.append(ScoreDistributionDTO(from_score=score_range[ZERO], to_score=score_range[ONE], count=score_distro_dict[k]))
+            score_distro_dtos.append(ScoreDistributionDTO(from_score=score_range[ZERO], to_score=score_range[ONE],
+                                                          count=score_distro_dict[k]))
         return score_distro_dtos
 
-    def get_score_changes(self, user_id: int) -> List[ScoreChangesDTO]:
+    def get_score_time_series(self, user_id: int, month_filter: int) -> List[ScoreTimeSeriesDTO]:
+        if user_id is None:
+            raise ScoringException(3, 'user_id can not be None!')
+
+        end_date = date.today()
+        start_date = end_date - timedelta(month_filter)
+        score_ts: [ScoreTimeSeries] = self.get_db_score_time_series(user_id, start_date, end_date)
+        score_changes_dtos: [ScoreTimeSeriesDTO] = []
+        for ts in score_ts:
+            score_changes_dtos.append(ScoreTimeSeriesDTO(score_date=ts.score_date, score=ts.score))
+        return score_changes_dtos
+
+    def get_score_changes(self, user_id: int) -> List[ScoreChangeDTO]:
         if user_id is None:
             raise ScoringException(3, 'user_id can not be None!')
         score_changes: [ScoreChange] = self.get_user_score_changes(user_id)
-        sch_dtos: [ScoreChangesDTO] = []
+        scr_dtos: [ScoreChangeDTO] = []
         for sch in score_changes:
-            sch_dtos.append(create_score_changes_dto(sch))
-        return sch_dtos
+            scr_dtos.append(create_score_changes_dto(sch))
+        return scr_dtos

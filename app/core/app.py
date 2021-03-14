@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from app.core.data.import_rules_data import import_rules
+# from app.core.data.import_rules_data import import_rules
 from app.routes import views
 
 app = FastAPI()
@@ -16,9 +16,6 @@ app.add_middleware(
 )
 
 app.include_router(views.router)
-
-
-
 
 # dependency injection #
 # class Service:

@@ -1,7 +1,12 @@
-from datetime import date, datetime
+from datetime import date
 
 from numpy import long
 
+from app.core.constants import SCORE_CODE_RULES_UNDONE_PAST_DUE_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS, \
+    SCORE_CODE_RULES_UNDONE_ARREAR_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS, GENERAL_AVG_DEAL_AMOUNT, \
+    GENERAL_AVG_DELAY_DAYS, \
+    ALL_USERS_AVERAGE_UNFIXED_RETURNED_CHEQUES_AMOUNT, TIMELINESS_SCORE, IDENTITIES_SCORE, HISTORIES_SCORE, \
+    VOLUMES_SCORE, NORMALIZATION_MAX_SCORE, ONE_HUNDRED, ALL_USERS_AVERAGE_MONTHLY_INSTALLMENT_AMOUNT
 from app.core.data.caching.redis_caching import RedisCaching
 from app.core.data.caching.redis_caching_rules_cheques import RedisCachingRulesCheques
 from app.core.data.caching.redis_caching_rules_done_trades import RedisCachingRulesDoneTrades
@@ -10,10 +15,6 @@ from app.core.data.caching.redis_caching_rules_masters import RedisCachingRulesM
 from app.core.data.caching.redis_caching_rules_profiles import RedisCachingRulesProfiles
 from app.core.data.caching.redis_caching_rules_undone_trades import RedisCachingRulesUndoneTrades
 from app.core.models.cheques import Cheque
-from app.core.constants import SCORE_CODE_RULES_UNDONE_PAST_DUE_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS, \
-    SCORE_CODE_RULES_UNDONE_ARREAR_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS, GENERAL_AVG_DEAL_AMOUNT, GENERAL_AVG_DELAY_DAYS, \
-    ALL_USERS_AVERAGE_UNFIXED_RETURNED_CHEQUES_AMOUNT, TIMELINESS_SCORE, IDENTITIES_SCORE, HISTORIES_SCORE, \
-    VOLUMES_SCORE, NORMALIZATION_MAX_SCORE, ONE_HUNDRED, ALL_USERS_AVERAGE_MONTHLY_INSTALLMENT_AMOUNT, USER_ID
 from app.core.models.done_trades import DoneTrade
 from app.core.models.loans import Loan
 from app.core.models.profile import Profile
@@ -77,7 +78,8 @@ class ScoreCalculationService:
         # normalized_profile_score += normalized_score
         profile_score += score
         self.scores_dict[HISTORIES_SCORE] = self.scores_dict.get(HISTORIES_SCORE) + score
-        print('score= {}, profile:[membership_date-h5]= {}, profile_member_ship_days_count={}'.format(score, profile.membership_date,
+        print('score= {}, profile:[membership_date-h5]= {}, profile_member_ship_days_count={}'.format(score,
+                                                                                                      profile.membership_date,
                                                                                                       member_ship_days_count))
         score = rds.get_score_of_rules_profile_military_service_status_i2(profile.military_service_status)
         # normalized_score = calculate_normalized_score(I2_RULES_PROFILE_MILITARY_SERVICE_STATUS, score)
@@ -91,7 +93,8 @@ class ScoreCalculationService:
         # normalized_profile_score += normalized_score
         profile_score += score
         self.scores_dict[HISTORIES_SCORE] = self.scores_dict.get(HISTORIES_SCORE) + score
-        print('score= {}, profile:[recommended_to_others_count-h8]= {}'.format(score, profile.recommended_to_others_count))
+        print('score= {}, profile:[recommended_to_others_count-h8]= {}'.format(score,
+                                                                               profile.recommended_to_others_count))
 
         score = rds.get_score_of_rules_profile_sim_card_ownerships_i3(profile.sim_card_ownership)
         # normalized_score = calculate_normalized_score(I3_RULES_PROFILE_SIM_CARD_OWNERSHIPS, score)
@@ -124,14 +127,17 @@ class ScoreCalculationService:
         done_trades_score = 0
         normalized_done_trades_score = 0
 
-        score = rds.get_score_of_rules_done_timely_trades_of_last_3_months_h6(done_trade.timely_trades_count_of_last_3_months)
+        score = rds.get_score_of_rules_done_timely_trades_of_last_3_months_h6(
+            done_trade.timely_trades_count_of_last_3_months)
         # normalized_score = calculate_normalized_score(H6_RULES_DONE_TIMELY_TRADES_OF_LAST_3_MONTHS, score)
         # normalized_done_trades_score += normalized_score
         done_trades_score += score
         self.scores_dict[HISTORIES_SCORE] = self.scores_dict.get(HISTORIES_SCORE) + score
-        print('score= {}, doneTrades:[timely_trades_count_of_last_3_months-h6]= {}'.format(score, done_trade.timely_trades_count_of_last_3_months))
+        print('score= {}, doneTrades:[timely_trades_count_of_last_3_months-h6]= {}'.format(score,
+                                                                                           done_trade.timely_trades_count_of_last_3_months))
 
-        score = rds.get_score_of_rules_done_timely_trades_between_last_3_to_12_months_h7(done_trade.timely_trades_count_between_last_3_to_12_months)
+        score = rds.get_score_of_rules_done_timely_trades_between_last_3_to_12_months_h7(
+            done_trade.timely_trades_count_between_last_3_to_12_months)
         # normalized_score = calculate_normalized_score(H7_RULES_DONE_TIMELY_TRADES_BETWEEN_LAST_3_TO_12_MONTHS, score)
         # normalized_done_trades_score += normalized_score
         done_trades_score += score
@@ -139,13 +145,15 @@ class ScoreCalculationService:
         print('score= {}, doneTrades:[timely_trades_count_between_last_3_to_12_months-h7]= {}'
               .format(score, done_trade.timely_trades_count_between_last_3_to_12_months))
 
-        score = rds.get_score_of_rules_done_past_due_trades_of_last_3_months_t22(done_trade.past_due_trades_count_of_last_3_months)
+        score = rds.get_score_of_rules_done_past_due_trades_of_last_3_months_t22(
+            done_trade.past_due_trades_count_of_last_3_months)
         # normalized_score = calculate_normalized_score(T22_RULES_DONE_PAST_DUE_TRADES_OF_LAST_3_MONTHS, score)
         # normalized_done_trades_score += normalized_score
         done_trades_score += score
         self.scores_dict[TIMELINESS_SCORE] = self.scores_dict.get(TIMELINESS_SCORE) + score
         print(
-            'score= {}, doneTrades:[past_due_trades_count_of_last_3_months-t22]= {}'.format(score, done_trade.past_due_trades_count_of_last_3_months))
+            'score= {}, doneTrades:[past_due_trades_count_of_last_3_months-t22]= {}'.format(score,
+                                                                                            done_trade.past_due_trades_count_of_last_3_months))
 
         score = rds.get_score_of_rules_done_past_due_trades_between_last_3_to_12_months_t23(
             done_trade.past_due_trades_count_between_last_3_to_12_months)
@@ -156,14 +164,17 @@ class ScoreCalculationService:
         print('score= {}, doneTrades:[past_due_trades_count_between_last_3_to_12_months-t23]= {}'.
               format(score, done_trade.past_due_trades_count_between_last_3_to_12_months))
 
-        score = rds.get_score_of_rules_done_arrear_trades_of_last_3_months_t24(done_trade.arrear_trades_count_of_last_3_months)
+        score = rds.get_score_of_rules_done_arrear_trades_of_last_3_months_t24(
+            done_trade.arrear_trades_count_of_last_3_months)
         # normalized_score = calculate_normalized_score(T24_RULES_DONE_ARREAR_TRADES_OF_LAST_3_MONTHS, score)
         # normalized_done_trades_score += normalized_score
         done_trades_score += score
         self.scores_dict[TIMELINESS_SCORE] = self.scores_dict.get(TIMELINESS_SCORE) + score
-        print('score= {}, doneTrades:[arrear_trades_count_of_last_3_months-t24]= {}'.format(score, done_trade.arrear_trades_count_of_last_3_months))
+        print('score= {}, doneTrades:[arrear_trades_count_of_last_3_months-t24]= {}'.format(score,
+                                                                                            done_trade.arrear_trades_count_of_last_3_months))
 
-        score = rds.get_score_of_rules_done_arrear_trades_between_last_3_to_12_months_t25(done_trade.arrear_trades_count_between_last_3_to_12_months)
+        score = rds.get_score_of_rules_done_arrear_trades_between_last_3_to_12_months_t25(
+            done_trade.arrear_trades_count_between_last_3_to_12_months)
         # normalized_score = calculate_normalized_score(T25_RULES_DONE_ARREAR_TRADES_BETWEEN_LAST_3_TO_12_MONTHS, score)
         # normalized_done_trades_score += normalized_score
         done_trades_score += score
@@ -196,14 +207,14 @@ class ScoreCalculationService:
         # print('............. doneTrades_score = {} , normalized_score = {} ................\n'.
         # format(done_trades_score, normalized_done_trades_score))
 
-        print('............. doneTrades_score = {} ................'.format(done_trades_score, normalized_done_trades_score))
+        print('............. doneTrades_score = {} ................'.format(done_trades_score,
+                                                                            normalized_done_trades_score))
         print('... IDENTITIES_SCORE= {} , HISTORIES_SCORE= {}, VOLUMES_SCORE= {}, TIMELINESS_SCORE= {} \n'
               .format(self.scores_dict.get(IDENTITIES_SCORE), self.scores_dict.get(HISTORIES_SCORE),
                       self.scores_dict.get(VOLUMES_SCORE), self.scores_dict.get(TIMELINESS_SCORE)))
         return done_trades_score
 
-    def calculate_user_undone_trades_score(self, user_id: long, reset_cache=False, undone_trade_object: UndoneTrade = None,
-                                           done_trade_object: DoneTrade = None):
+    def calculate_user_undone_trades_score(self, user_id: long, reset_cache=False, undone_trade_object: UndoneTrade = None, done_trade_object: DoneTrade = None):
         if undone_trade_object is not None:
             undone_trade = undone_trade_object
         else:
@@ -225,8 +236,10 @@ class ScoreCalculationService:
         print('score= {}, undoneTrades:[undue_trades_count-h10]= {}'.format(score, undone_trade.undue_trades_count))
 
         # calculate undue_total_balance_ratio
-        undue_total_balance_ratio = float(undone_trade.undue_trades_total_balance_of_last_year / done_trade.trades_total_balance)
-        score = rds.get_score_of_rules_undone_undue_trades_total_balance_of_last_year_ratios_v15(undue_total_balance_ratio)
+        undue_total_balance_ratio = float(
+            undone_trade.undue_trades_total_balance_of_last_year / done_trade.trades_total_balance)
+        score = rds.get_score_of_rules_undone_undue_trades_total_balance_of_last_year_ratios_v15(
+            undue_total_balance_ratio)
         # normalized_score = calculate_normalized_score(V15_RULES_UNDONE_UNDUE_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS, score)
         # normalized_undone_trades_score += normalized_score
         undone_trades_score += score
@@ -240,12 +253,14 @@ class ScoreCalculationService:
         self.scores_dict[TIMELINESS_SCORE] = self.scores_dict.get(TIMELINESS_SCORE) + score
         print('score= {}, undoneTrades:[past_due_trades_count-t26]= {}'.format(score, undone_trade.past_due_trades_count))
 
-        timely_done_trades_of_last_year = (
-                done_trade.timely_trades_count_of_last_3_months + done_trade.timely_trades_count_between_last_3_to_12_months)
+        timely_done_trades_of_last_year = (done_trade.timely_trades_count_of_last_3_months + done_trade.timely_trades_count_between_last_3_to_12_months)
         # calculate past_due_total_balance_ratio
-        past_due_total_balance_ratio = float(undone_trade.past_due_trades_total_balance_of_last_year / done_trade.trades_total_balance)
-        score = rds.get_score_of_rules_undone_past_due_trades_total_balance_of_last_year_ratios_v13(past_due_total_balance_ratio)
-        score_code = rds.get_score_code_of_rules_undone_past_due_trades_total_balance_of_last_year_ratios_v13(past_due_total_balance_ratio)
+        past_due_total_balance_ratio = float(
+            undone_trade.past_due_trades_total_balance_of_last_year / done_trade.trades_total_balance)
+        score = rds.get_score_of_rules_undone_past_due_trades_total_balance_of_last_year_ratios_v13(
+            past_due_total_balance_ratio)
+        score_code = rds.get_score_code_of_rules_undone_past_due_trades_total_balance_of_last_year_ratios_v13(
+            past_due_total_balance_ratio)
         if timely_done_trades_of_last_year == 1 and score_code == SCORE_CODE_RULES_UNDONE_PAST_DUE_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS:
             score *= 2
 
@@ -253,7 +268,7 @@ class ScoreCalculationService:
         # normalized_undone_trades_score += normalized_score
         undone_trades_score += score
         self.scores_dict[VOLUMES_SCORE] = self.scores_dict.get(VOLUMES_SCORE) + score
-        print('score= {}, undoneTrades:[past_due_total_balance_ratio-v13]= {}'.format(score, past_due_total_balance_ratio))
+        print('score= {}, undoneTrades:[past_due_total_balance_ratio-v13]= {}'.format(score,past_due_total_balance_ratio))
 
         score = rds.get_score_of_rules_undone_arrear_trades_counts_t27(undone_trade.arrear_trades_count)
         # normalized_score = calculate_normalized_score(T27_RULES_UNDONE_ARREAR_TRADES_COUNTS, score)
@@ -263,9 +278,12 @@ class ScoreCalculationService:
         print('score= {}, undoneTrades:[arrear_trades_count-t27]= {}'.format(score, undone_trade.arrear_trades_count))
 
         # calculate arrear_total_balance_ratio
-        arrear_total_balance_ratio = float(undone_trade.arrear_trades_total_balance_of_last_year / done_trade.trades_total_balance)
-        score = rds.get_score_of_rules_undone_arrear_trades_total_balance_of_last_year_ratios_v14(arrear_total_balance_ratio)
-        score_code = rds.get_score_code_of_rules_undone_arrear_trades_total_balance_of_last_year_ratios_v14(arrear_total_balance_ratio)
+        arrear_total_balance_ratio = float(
+            undone_trade.arrear_trades_total_balance_of_last_year / done_trade.trades_total_balance)
+        score = rds.get_score_of_rules_undone_arrear_trades_total_balance_of_last_year_ratios_v14(
+            arrear_total_balance_ratio)
+        score_code = rds.get_score_code_of_rules_undone_arrear_trades_total_balance_of_last_year_ratios_v14(
+            arrear_total_balance_ratio)
         if timely_done_trades_of_last_year == 1 and score_code == SCORE_CODE_RULES_UNDONE_ARREAR_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS:
             score *= 2
         # normalized_score = calculate_normalized_score(V14_RULES_UNDONE_ARREAR_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS, score)
@@ -304,15 +322,18 @@ class ScoreCalculationService:
         installments_total_balance_ratio = 0 if ALL_USERS_AVERAGE_MONTHLY_INSTALLMENT_AMOUNT == 0 else float(
             loan.monthly_installments_total_balance / ALL_USERS_AVERAGE_MONTHLY_INSTALLMENT_AMOUNT)
 
-        score = rds.get_score_of_rules_loan_monthly_installments_total_balance_ratios_v16(installments_total_balance_ratio)
+        score = rds.get_score_of_rules_loan_monthly_installments_total_balance_ratios_v16(
+            installments_total_balance_ratio)
         # normalized_score = calculate_normalized_score(V16_RULES_LOAN_MONTHLY_INSTALLMENTS_TOTAL_BALANCE_RATIOS, score)
         # normalized_loans_score += normalized_score
         loans_score += score
         self.scores_dict[VOLUMES_SCORE] = self.scores_dict.get(VOLUMES_SCORE) + score
-        print('score= {}, loans:[installments_total_balance_ratio-v16]= {}'.format(score, installments_total_balance_ratio))
+        print('score= {}, loans:[installments_total_balance_ratio-v16]= {}'.format(score,
+                                                                                   installments_total_balance_ratio))
 
         # should be calculate user_total_loans_balance
-        overdue_total_balance_ratio = 0 if loan.loans_total_balance == 0 else float(loan.overdue_loans_total_balance / loan.loans_total_balance)
+        overdue_total_balance_ratio = 0 if loan.loans_total_balance == 0 else float(
+            loan.overdue_loans_total_balance / loan.loans_total_balance)
         score = rds.get_score_of_rules_overdue_loans_total_balance_ratios_v18(overdue_total_balance_ratio)
         # normalized_score = calculate_normalized_score(V18_RULES_LOAN_OVERDUE_TOTAL_BALANCE_RATIOS, score)
         # normalized_loans_score += normalized_score
@@ -328,7 +349,8 @@ class ScoreCalculationService:
         print('score= {}, loans:[past_due_loans_total_count-t33]= {}'.format(score, loan.past_due_loans_total_count))
 
         # should be calculate user_total_loans_balance
-        past_due_total_balance_ratio = 0 if loan.loans_total_balance == 0 else float(loan.past_due_loans_total_balance / loan.loans_total_balance)
+        past_due_total_balance_ratio = 0 if loan.loans_total_balance == 0 else float(
+            loan.past_due_loans_total_balance / loan.loans_total_balance)
         score = rds.get_score_of_rules_past_due_loans_total_balance_ratios_v19(past_due_total_balance_ratio)
         # normalized_score = calculate_normalized_score(V19_RULES_LOAN_PAST_DUE_TOTAL_BALANCE_RATIOS, score)
         # normalized_loans_score += normalized_score
@@ -344,7 +366,8 @@ class ScoreCalculationService:
         print('score= {}, loans:[arrear_loans_total_count-t34]= {}'.format(score, loan.arrear_loans_total_count))
 
         # should be calculate user_total_loans_balance
-        arrear_total_balance_ratio = 0 if loan.loans_total_balance == 0 else float(loan.arrear_loans_total_balance / loan.loans_total_balance)
+        arrear_total_balance_ratio = 0 if loan.loans_total_balance == 0 else float(
+            loan.arrear_loans_total_balance / loan.loans_total_balance)
         score = rds.get_score_of_rules_arrear_loans_total_balance_ratios_v20(arrear_total_balance_ratio)
         # normalized_score = calculate_normalized_score(V20_RULES_LOAN_ARREAR_TOTAL_BALANCE_RATIOS, score)
         # normalized_loans_score += normalized_score
@@ -357,10 +380,12 @@ class ScoreCalculationService:
         # normalized_loans_score += normalized_score
         # loans_score += score
         self.scores_dict[TIMELINESS_SCORE] = self.scores_dict.get(TIMELINESS_SCORE) + score
-        print('score= {}, loans:[suspicious_loans_total_count-t35]= {}'.format(score, loan.suspicious_loans_total_count))
+        print(
+            'score= {}, loans:[suspicious_loans_total_count-t35]= {}'.format(score, loan.suspicious_loans_total_count))
 
         # should be calculate user_total_loans_balance
-        suspicious_total_balance_ratio = 0 if loan.loans_total_balance == 0 else float(loan.suspicious_loans_total_balance / loan.loans_total_balance)
+        suspicious_total_balance_ratio = 0 if loan.loans_total_balance == 0 else float(
+            loan.suspicious_loans_total_balance / loan.loans_total_balance)
         score = rds.get_score_of_rules_suspicious_loans_total_balance_ratios_v21(suspicious_total_balance_ratio)
         # normalized_score = calculate_normalized_score(V21_RULES_LOAN_SUSPICIOUS_TOTAL_BALANCE_RATIOS, score)
         # normalized_loans_score += normalized_score
@@ -421,7 +446,8 @@ class ScoreCalculationService:
               .format(score, cheque.unfixed_returned_cheques_count_of_more_12_months))
 
         # should be calculate avg_of_all_users_unfixed_returned_cheques_total_balance
-        total_balance_ratio = float(cheque.unfixed_returned_cheques_total_balance / ALL_USERS_AVERAGE_UNFIXED_RETURNED_CHEQUES_AMOUNT)
+        total_balance_ratio = float(
+            cheque.unfixed_returned_cheques_total_balance / ALL_USERS_AVERAGE_UNFIXED_RETURNED_CHEQUES_AMOUNT)
         score = rds.get_score_of_rules_unfixed_returned_cheques_total_balance_ratios_v17(total_balance_ratio)
         # normalized_score = calculate_normalized_score(V17_RULES_CHEQUE_UNFIXED_RETURNED_TOTAL_BALANCE_RATIOS, score)
         # normalized_cheques_score += normalized_score
@@ -442,24 +468,30 @@ class ScoreCalculationService:
         identities_max_percent = float(self.crm.get_impact_percent_of_rule_identities_master())
         identities_max_score = float(self.crm.get_score_of_rule_identities_master())
         identities_normalized_score = round(
-            ((identities_pure_score / identities_max_score) * NORMALIZATION_MAX_SCORE) * (identities_max_percent / ONE_HUNDRED))
-        print('... identities_max_percent= {}, identities_max_score= {}, identities_pure_score= {}, identities_normalized_score= {}'
-              .format(identities_max_percent, identities_max_score, identities_pure_score, identities_normalized_score))
+            ((identities_pure_score / identities_max_score) * NORMALIZATION_MAX_SCORE) * (
+                    identities_max_percent / ONE_HUNDRED))
+        print(
+            '... identities_max_percent= {}, identities_max_score= {}, identities_pure_score= {}, identities_normalized_score= {}'
+                .format(identities_max_percent, identities_max_score, identities_pure_score,
+                        identities_normalized_score))
         return identities_normalized_score
 
     def calculate_histories_normalized_score(self, histories_pure_score: int):
         histories_max_score = float(self.crm.get_score_of_rule_histories_master())
         histories_max_percent = float(self.crm.get_impact_percent_of_rule_histories_master())
         histories_normalized_score = round(
-            ((histories_pure_score / histories_max_score) * NORMALIZATION_MAX_SCORE) * (histories_max_percent / ONE_HUNDRED))
-        print('... histories_max_percent= {}, histories_max_score= {}, histories_pure_score= {}, histories_normalized_score= {}'
-              .format(histories_max_percent, histories_max_score, histories_pure_score, histories_normalized_score))
+            ((histories_pure_score / histories_max_score) * NORMALIZATION_MAX_SCORE) * (
+                    histories_max_percent / ONE_HUNDRED))
+        print(
+            '... histories_max_percent= {}, histories_max_score= {}, histories_pure_score= {}, histories_normalized_score= {}'
+                .format(histories_max_percent, histories_max_score, histories_pure_score, histories_normalized_score))
         return histories_normalized_score
 
     def calculate_volumes_normalized_score(self, volumes_pure_score: int):
         volumes_max_score = float(self.crm.get_score_of_rule_volumes_master())
         volumes_max_percent = float(self.crm.get_impact_percent_of_rule_volumes_master())
-        volumes_normalized_score = round(((volumes_pure_score / volumes_max_score) * NORMALIZATION_MAX_SCORE) * (volumes_max_percent / ONE_HUNDRED))
+        volumes_normalized_score = round(
+            ((volumes_pure_score / volumes_max_score) * NORMALIZATION_MAX_SCORE) * (volumes_max_percent / ONE_HUNDRED))
         print('... volumes_max_percent= {}, volumes_max_score= {}, volumes_pure_score= {}, volumes_normalized_score= {}'
               .format(volumes_max_percent, volumes_max_score, volumes_pure_score, volumes_normalized_score))
         return volumes_normalized_score
@@ -468,7 +500,10 @@ class ScoreCalculationService:
         timeliness_max_score = float(self.crm.get_score_of_rule_timeliness_master())
         timeliness_max_percent = float(self.crm.get_impact_percent_of_rule_timeliness_master())
         timeliness_normalized_score = round(
-            ((timeliness_pure_score / timeliness_max_score) * NORMALIZATION_MAX_SCORE) * (timeliness_max_percent / ONE_HUNDRED))
-        print('... timeliness_max_percent= {}, timeliness_max_score= {}, timeliness_pure_score= {}, timeliness_normalized_score= {}'
-              .format(timeliness_max_percent, timeliness_max_score, timeliness_pure_score, timeliness_normalized_score))
+            ((timeliness_pure_score / timeliness_max_score) * NORMALIZATION_MAX_SCORE) * (
+                    timeliness_max_percent / ONE_HUNDRED))
+        print(
+            '... timeliness_max_percent= {}, timeliness_max_score= {}, timeliness_pure_score= {}, timeliness_normalized_score= {}'
+                .format(timeliness_max_percent, timeliness_max_score, timeliness_pure_score,
+                        timeliness_normalized_score))
         return timeliness_normalized_score

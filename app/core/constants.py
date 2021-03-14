@@ -1,3 +1,6 @@
+# Jalali Date Constants
+PERSIAN_LOCALE = 'fa_IR'
+
 rules_min_val = 0
 rules_max_val = 999
 score_deliminator = ':'
@@ -9,6 +12,9 @@ COUNT_KEY = 'cnt'
 # general average parameters
 ZERO = 0
 ONE = 1
+SIX = 6
+TWELVE = 12
+THIRTY = 30
 ONE_HUNDRED = 100
 NORMALIZATION_MAX_SCORE = 1000
 GENERAL_AVG_DEAL_AMOUNT = 10000000
@@ -35,6 +41,10 @@ DAYS = 'days'
 UNDUE_TRADES_COUNT = 'undue_trades_count'
 PAST_DUE_TRADES_COUNT = 'past_due_trades_count'
 ARREAR_TRADES_COUNT = 'arrear_trades_count'
+SCORE_DATE = 'score_date'
+RULE_MASTER_CODE = 'rule_master_code'
+RULE_CODES = 'rule_codes'
+
 
 # scoring dict keys
 IDENTITIES_SCORE = 'IDENTITIES_SCORE'
