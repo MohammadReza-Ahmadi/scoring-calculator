@@ -26,7 +26,7 @@ from app.core.models.loans import Loan
 from app.core.models.profile import Profile
 from app.core.models.rules import Rule
 from app.core.models.score_changes import ScoreChange
-from app.core.models.score_changes_reasons import ScoreChangeReason
+from app.core.models.score_changes_reasons import ScoreReason
 from app.core.models.score_gauges import ScoreGauge
 from app.core.models.score_time_series import ScoreTimeSeries
 from app.core.models.undone_trades import UndoneTrade
@@ -93,21 +93,6 @@ class DataService:
         for r in rules:
             m_dict.__setitem__(r.code, [r.score, r.impact_percent])
         return m_dict
-
-    # ScoreChangeReason SERVICES ................................................
-    def insert_score_change_reason(self, scr: ScoreChangeReason):
-        self.db.scoreChangeReasons.insert_one(dict(scr))
-
-    def delete_score_change_reasons(self, filter_dict: {}) -> None:
-        self.db.scoreChangeReasons.delete_many(filter_dict)
-
-    def get_score_change_reason_by_rule_code(self, rule_code: str) -> ScoreChangeReason:
-        if rule_code is None:
-            raise ScoringException(2, 'rule_code is empty!')
-        dic = self.db.scoreChangeReasons.find({RULE_CODES: rule_code})
-        if dic is None:
-            return ScoreChangeReason()
-        return ScoreChangeReason.parse_obj(dic)
 
     # PROFILE SERVICES ................................................
     def insert_profile(self, p: Profile):
@@ -227,13 +212,31 @@ class DataService:
             return Cheque()
         return Cheque.parse_obj(dic)
 
-    # SCORE CHANGES SERVICES ................................................
+    # SCORE CHANGE REASON SERVICES ................................................
+    def insert_score_change_reason(self, scr: ScoreReason):
+        self.db.scoreChangeReasons.insert_one(dict(scr))
+
+    def delete_score_change_reasons(self, filter_dict: {}) -> None:
+        self.db.scoreChangeReasons.delete_many(filter_dict)
+
+    def get_score_reason_by_rule_code(self, rule_code: str) -> ScoreReason:
+        if rule_code is None:
+            raise ScoringException(2, 'rule_code is empty!')
+        dic = self.db.scoreChangeReasons.find({RULE_CODES: rule_code})
+        if dic is None:
+            return ScoreReason()
+        return ScoreReason.parse_obj(dic)
+
+    # SCORE CHANGE SERVICES ................................................
     def get_user_score_changes(self, user_id: int) -> List[ScoreChange]:
         if user_id is None:
             raise ScoringException(3, 'user_id can not be None!')
 
         ret_list = list(self.db.scoreChanges.find({USER_ID: user_id}))
         return parse_obj_as(List[ScoreChange], ret_list)
+
+    def insert_score_change(self, sc: ScoreChange):
+        self.db.scoreChange.insert_one(dict(sc))
 
     # REST SERVICES ................................................
     def get_score_boundaries(self) -> ScoreBoundariesDTO:
@@ -288,7 +291,7 @@ class DataService:
                     get_zero_if_null(dt.timely_trades_count_of_last_3_months) + get_zero_if_null(
                 dt.timely_trades_count_between_last_3_to_12_months))
             # calc delayDays' avg
-            delay_days_avg = dt.total_delay_days // delayed_dt_count
+            delay_days_avg = 0 if delayed_dt_count == 0 else dt.total_delay_days // delayed_dt_count
 
         # calc negativeStatus count
         # todo: this field should be calculated later based on negative_histories which should be provided
@@ -334,12 +337,12 @@ class DataService:
                                                           count=score_distro_dict[k]))
         return score_distro_dtos
 
-    def get_score_time_series(self, user_id: int, month_filter: int) -> List[ScoreTimeSeriesDTO]:
+    def get_score_time_series(self, user_id: int, number_of_days: int) -> List[ScoreTimeSeriesDTO]:
         if user_id is None:
             raise ScoringException(3, 'user_id can not be None!')
 
         end_date = date.today()
-        start_date = end_date - timedelta(month_filter)
+        start_date = end_date - timedelta(number_of_days)
         score_ts: [ScoreTimeSeries] = self.get_db_score_time_series(user_id, start_date, end_date)
         score_changes_dtos: [ScoreTimeSeriesDTO] = []
         for ts in score_ts:

@@ -8,12 +8,13 @@ from app.core.services.data_service import DataService
 
 if __name__ == '__main__':
     ds = DataService(get_db())
-    for i in range(1000):
+    ds.delete_profiles({})
+    for i in range(2):
         p = Profile(user_id=int(100 + i))
-        p.has_kyc = True
+        p.has_kyc = 1
         p.military_service_status = ProfileMilitaryServiceStatusEnum.FINISHED
-        p.sim_card_ownership = True
-        p.address_verification = True
+        p.sim_card_ownership = 1
+        p.address_verification = 1
         p.membership_date = date.today()
         p.recommended_to_others_count = 23
         p.star_count_average = 1

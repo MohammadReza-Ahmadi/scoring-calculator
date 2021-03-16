@@ -20,10 +20,11 @@ from app.core.models.profile import Profile
 from app.core.models.rules import Rule
 from app.core.models.score_changes import ScoreChange
 # noinspection DuplicatedCode
-from app.core.models.score_changes_reasons import ScoreChangeReason
-
-
+from app.core.models.score_changes_reasons import ScoreReason
 # noinspection DuplicatedCode
+from app.core.settings import max_score
+
+
 def create_new_rule(level, parent: str, code: str, title: str, impact_percent: float, score: int = None,
                     min_val: float = None, max_val: float = None):
     rule = Rule()
@@ -39,7 +40,7 @@ def create_new_rule(level, parent: str, code: str, title: str, impact_percent: f
 
 
 def create_new_score_change_reason(rule_master_code: str, rule_codes: List[str], positive_reason: str, negative_reason: str = None):
-    scr = ScoreChangeReason()
+    scr = ScoreReason()
     scr.rule_master_code = rule_master_code
     scr.rule_codes = rule_codes
     scr.positive_reason = positive_reason
@@ -47,9 +48,20 @@ def create_new_score_change_reason(rule_master_code: str, rule_codes: List[str],
     return scr
 
 
+def create_new_score_change(user_id: int, reason_rule_code: str, score_change: int, score: int):
+    sch = ScoreChange()
+    sch.user_id = user_id
+    sch.reason_rule_code = reason_rule_code
+    sch.score_change = score_change
+    sch.score = score
+    sch.change_date = datetime.today()
+    return sch
+
+
 def create_score_status_dto(score: int, score_gauges: list, last_score_change: int, last_update_date: datetime):
     ssd = ScoreStatusDTO()
     ssd.score = get_not_none_value(score, ssd.score)
+    ssd.max_score = max_score
     ssd.score_gauges = get_not_none_value(score_gauges, ssd.score_gauges)
     ssd.last_score_change = get_not_none_value(last_score_change, ssd.last_score_change)
     ssd.last_update_date = get_not_none_value(last_update_date, ssd.last_update_date)

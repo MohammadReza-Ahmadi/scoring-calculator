@@ -30,7 +30,7 @@ def read_scenarios_dicts_from_csv(csv_path):
     return scenarios_dicts
 
 
-def calculate_score(scenarios_dicts: [], user_id: int = None):
+def calculate_score(scenarios_dicts: [], user_id: int):
     # mongoengine_api.launch_app()
     ds = DataService()
     rds = RedisCaching(ds)
@@ -41,19 +41,24 @@ def calculate_score(scenarios_dicts: [], user_id: int = None):
         expected_score = scn_dict['Vscore']
 
         # DoneTrade Score Calculation ..................................................
-        dt = DoneTrade(user_id=user_id)
-        dt.timely_trades_count_of_last_3_months = scn_dict['Last3MSD']
-        dt.timely_trades_count_between_last_3_to_12_months = scn_dict['Last1YSD']
-        dt.past_due_trades_count_of_last_3_months = scn_dict['B30DayDelayLast3M']
-        dt.past_due_trades_count_between_last_3_to_12_months = scn_dict['B30DayDelayLast3-12M']
-        dt.arrear_trades_count_of_last_3_months = scn_dict['A30DayDelayLast3M']
-        dt.arrear_trades_count_between_last_3_to_12_months = scn_dict['A30DayDelay3-12M']
-        dt.total_delay_days = scn_dict['AverageDelayRatio']
-        # todo: 100000000 is fix Denominator that is all_other_users_done_trades_amount, it should be change later
-        dt.trades_total_balance = round(float(scn_dict['SDealAmountRatio']) * ALL_USERS_AVERAGE_DEAL_AMOUNT)
+        dt = ds.get_user_done_trade(user_id)
+        if dt is None:
+            dt = DoneTrade(user_id=user_id)
+            dt.timely_trades_count_of_last_3_months = scn_dict['Last3MSD']
+            dt.timely_trades_count_between_last_3_to_12_months = scn_dict['Last1YSD']
+            dt.past_due_trades_count_of_last_3_months = scn_dict['B30DayDelayLast3M']
+            dt.past_due_trades_count_between_last_3_to_12_months = scn_dict['B30DayDelayLast3-12M']
+            dt.arrear_trades_count_of_last_3_months = scn_dict['A30DayDelayLast3M']
+            dt.arrear_trades_count_between_last_3_to_12_months = scn_dict['A30DayDelay3-12M']
+            dt.total_delay_days = scn_dict['AverageDelayRatio']
+            # todo: 100000000 is fix Denominator that is all_other_users_done_trades_amount, it should be change later
+            dt.trades_total_balance = round(float(scn_dict['SDealAmountRatio']) * ALL_USERS_AVERAGE_DEAL_AMOUNT)
+            ds.insert_done_trade(dt)
+
         done_trades_score = cs.calculate_user_done_trades_score(user_id=0, modified_done_trade=dt)
-        ds.delete_done_trades({USER_ID: user_id})
-        ds.insert_done_trade(dt)
+
+
+
 
         # UndoneTrade Score Calculation ..................................................
         udt = UndoneTrade(user_id=user_id)
@@ -101,6 +106,7 @@ def calculate_score(scenarios_dicts: [], user_id: int = None):
         ds.insert_cheque(ch)
 
         # Profile Score Calculation ..................................................
+
         if user_id is not None:
             ds.delete_profiles({USER_ID: user_id})
         p = Profile(user_id=user_id)

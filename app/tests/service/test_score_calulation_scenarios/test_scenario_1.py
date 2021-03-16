@@ -8,7 +8,6 @@ from app.core.models.done_trades import DoneTrade
 from app.core.models.loans import Loan
 from app.core.models.profile import Profile
 from app.core.models.undone_trades import UndoneTrade
-from infrastructure.caching.redis_caching import RedisCaching
 from app.core.models.scoring_enums import ProfileMilitaryServiceStatusEnum
 from app.core.services.score_calculation_service import ScoreCalculationService
 from app.core.services import general_data_service as gs

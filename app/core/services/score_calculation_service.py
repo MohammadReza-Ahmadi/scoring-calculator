@@ -18,8 +18,11 @@ from app.core.models.cheques import Cheque
 from app.core.models.done_trades import DoneTrade
 from app.core.models.loans import Loan
 from app.core.models.profile import Profile
+from app.core.models.score_changes import ScoreChange
+from app.core.models.score_changes_reasons import ScoreReason
 from app.core.models.undone_trades import UndoneTrade
 from app.core.services.data_service import DataService
+from app.core.services.util import create_new_score_change
 
 
 class ScoreCalculationService:
@@ -45,70 +48,69 @@ class ScoreCalculationService:
         print('<><><><><><><> total_pure_score = {} <><><><><><><>'.format(total_pure_score))
         return total_pure_score
 
-    def calculate_user_profile_score(self, user_id: long, reset_cache=False, profile_object: Profile = None):
-        profile: Profile
-        if profile_object is not None:
-            profile = profile_object
-        else:
-            # profile = Profile.objects(user_id=user_id).first()
-            profile = self.ds.get_user_profile(user_id)
-
+    def calculate_user_profile_score(self, user_id: long, reset_cache=False, recent_pf: Profile = None, revised_pf: Profile = None):
         rds: RedisCachingRulesProfiles = self.rds.get_redis_caching_rules_profile_service(reset_cache)
         profile_score = 0
         normalized_profile_score = 0
 
-        score = rds.get_score_of_rules_profile_address_verifications_i4(profile.address_verification)
+        score = rds.get_score_of_rules_profile_address_verifications_i4(revised_pf.address_verification)
+        recent_score = rds.get_score_of_rules_profile_address_verifications_i4(recent_pf.address_verification)
+        rule_code = rds.get_code_of_rules_profile_address_verifications_i4(revised_pf.address_verification)
+        revised_user_score = self.calculate_user_score_by_impressing_rule_score(recent_pf.score, recent_score, score)
+        self.create_score_change(user_id, rule_code, (score - recent_score), revised_user_score, (score > recent_score))
+
+        self.create_score_change(user_id, rule_code, )
         # normalized_score = calculate_normalized_score(I4_RULES_PROFILE_ADDRESS_VERIFICATIONS, score)
         # normalized_profile_score += normalized_score
         profile_score += score
         self.scores_dict[IDENTITIES_SCORE] = self.scores_dict.get(IDENTITIES_SCORE) + score
-        print('score= {}, profile:[address_verification-i4]= {}'.format(score, profile.address_verification))
+        print('score= {}, profile:[address_verification-i4]= {}'.format(score, revised_pf.address_verification))
 
-        score = rds.get_score_of_rules_profile_has_kycs_i1(profile.has_kyc)
+        score = rds.get_score_of_rules_profile_has_kycs_i1(revised_pf.has_kyc)
         # normalized_score = calculate_normalized_score(I1_RULES_PROFILE_HAS_KYCS, score)
         # normalized_profile_score += normalized_score
         profile_score += score
         self.scores_dict[IDENTITIES_SCORE] = self.scores_dict.get(IDENTITIES_SCORE) + score
-        print('score= {}, profile:[has_kyc-i1]= {}'.format(score, profile.has_kyc))
+        print('score= {}, profile:[has_kyc-i1]= {}'.format(score, revised_pf.has_kyc))
 
         # calculate membership days count
-        member_ship_days_count = (date.today() - profile.membership_date).days
+        member_ship_days_count = (date.today() - revised_pf.membership_date).days
         score = rds.get_score_of_rules_profile_membership_days_counts_h5(member_ship_days_count)
         # normalized_score = calculate_normalized_score(H5_RULES_PROFILE_MEMBERSHIP_DAYS_COUNTS, score)
         # normalized_profile_score += normalized_score
         profile_score += score
         self.scores_dict[HISTORIES_SCORE] = self.scores_dict.get(HISTORIES_SCORE) + score
         print('score= {}, profile:[membership_date-h5]= {}, profile_member_ship_days_count={}'.format(score,
-                                                                                                      profile.membership_date,
+                                                                                                      revised_pf.membership_date,
                                                                                                       member_ship_days_count))
-        score = rds.get_score_of_rules_profile_military_service_status_i2(profile.military_service_status)
+        score = rds.get_score_of_rules_profile_military_service_status_i2(revised_pf.military_service_status)
         # normalized_score = calculate_normalized_score(I2_RULES_PROFILE_MILITARY_SERVICE_STATUS, score)
         # normalized_profile_score += normalized_score
         profile_score += score
         self.scores_dict[IDENTITIES_SCORE] = self.scores_dict.get(IDENTITIES_SCORE) + score
-        print('score= {}, profile:[military_service_status-i2]= {}'.format(score, profile.military_service_status))
+        print('score= {}, profile:[military_service_status-i2]= {}'.format(score, revised_pf.military_service_status))
 
-        score = rds.get_score_of_rules_profile_recommended_to_others_counts_h8(profile.recommended_to_others_count)
+        score = rds.get_score_of_rules_profile_recommended_to_others_counts_h8(revised_pf.recommended_to_others_count)
         # normalized_score = calculate_normalized_score(H8_RULES_PROFILE_RECOMMENDED_TO_OTHERS_COUNTS, score)
         # normalized_profile_score += normalized_score
         profile_score += score
         self.scores_dict[HISTORIES_SCORE] = self.scores_dict.get(HISTORIES_SCORE) + score
         print('score= {}, profile:[recommended_to_others_count-h8]= {}'.format(score,
-                                                                               profile.recommended_to_others_count))
+                                                                               revised_pf.recommended_to_others_count))
 
-        score = rds.get_score_of_rules_profile_sim_card_ownerships_i3(profile.sim_card_ownership)
+        score = rds.get_score_of_rules_profile_sim_card_ownerships_i3(revised_pf.sim_card_ownership)
         # normalized_score = calculate_normalized_score(I3_RULES_PROFILE_SIM_CARD_OWNERSHIPS, score)
         # normalized_profile_score += normalized_score
         # profile_score += score
         self.scores_dict[IDENTITIES_SCORE] = self.scores_dict.get(IDENTITIES_SCORE) + score
-        print('score= {}, profile:[sim_card_ownership-i3]= {}'.format(score, profile.sim_card_ownership))
+        print('score= {}, profile:[sim_card_ownership-i3]= {}'.format(score, revised_pf.sim_card_ownership))
 
-        score = rds.get_score_of_rules_profile_star_counts_avgs_h9(profile.star_count_average)
+        score = rds.get_score_of_rules_profile_star_counts_avgs_h9(revised_pf.star_count_average)
         # normalized_score = calculate_normalized_score(H9_RULES_PROFILE_STAR_COUNTS_AVGS, score)
         # normalized_profile_score += normalized_score
         profile_score += score
         self.scores_dict[HISTORIES_SCORE] = self.scores_dict.get(HISTORIES_SCORE) + score
-        print('score= {}, profile:[star_count_average-h9]= {}'.format(score, profile.star_count_average))
+        print('score= {}, profile:[star_count_average-h9]= {}'.format(score, revised_pf.star_count_average))
 
         # print('............. profile score = {} , normalized_score = {} ................\n'.format(profile_score, normalized_profile_score))
         print('............. profile score = {} ................'.format(profile_score))
@@ -117,74 +119,69 @@ class ScoreCalculationService:
                       self.scores_dict.get(VOLUMES_SCORE), self.scores_dict.get(TIMELINESS_SCORE)))
         return profile_score
 
-    def calculate_user_done_trades_score(self, user_id: long, reset_cache=False, done_trade_object: DoneTrade = None):
-        if done_trade_object is not None:
-            done_trade = done_trade_object
-        else:
-            done_trade: DoneTrade = DoneTrade.objects(user_id=user_id).first()
-
+    def calculate_user_done_trades_score(self, user_id: long, user_score: int = 0, reset_cache=False, recent_dt: DoneTrade = None, revised_dt: DoneTrade = None):
         rds: RedisCachingRulesDoneTrades = self.rds.get_redis_caching_rules_done_trades_service(reset_cache)
         done_trades_score = 0
         normalized_done_trades_score = 0
 
-        score = rds.get_score_of_rules_done_timely_trades_of_last_3_months_h6(
-            done_trade.timely_trades_count_of_last_3_months)
+        score = rds.get_score_of_rules_done_timely_trades_of_last_3_months_h6(revised_dt.timely_trades_count_of_last_3_months)
+        recent_score = rds.get_score_of_rules_done_timely_trades_of_last_3_months_h6(recent_dt.timely_trades_count_of_last_3_months)
+        self.calculate_user_score_by_impressing_rule_score(user_score, recent_score, score)
+        # self.create_score_change(user_id, )
         # normalized_score = calculate_normalized_score(H6_RULES_DONE_TIMELY_TRADES_OF_LAST_3_MONTHS, score)
         # normalized_done_trades_score += normalized_score
         done_trades_score += score
         self.scores_dict[HISTORIES_SCORE] = self.scores_dict.get(HISTORIES_SCORE) + score
-        print('score= {}, doneTrades:[timely_trades_count_of_last_3_months-h6]= {}'.format(score,
-                                                                                           done_trade.timely_trades_count_of_last_3_months))
+        print('score= {}, doneTrades:[timely_trades_count_of_last_3_months_h6]= {}'.format(score, revised_dt.timely_trades_count_of_last_3_months))
 
-        score = rds.get_score_of_rules_done_timely_trades_between_last_3_to_12_months_h7(
-            done_trade.timely_trades_count_between_last_3_to_12_months)
+        score = rds.get_score_of_rules_done_timely_trades_between_last_3_to_12_months_h7(revised_dt.timely_trades_count_between_last_3_to_12_months)
         # normalized_score = calculate_normalized_score(H7_RULES_DONE_TIMELY_TRADES_BETWEEN_LAST_3_TO_12_MONTHS, score)
         # normalized_done_trades_score += normalized_score
         done_trades_score += score
         self.scores_dict[HISTORIES_SCORE] = self.scores_dict.get(HISTORIES_SCORE) + score
         print('score= {}, doneTrades:[timely_trades_count_between_last_3_to_12_months-h7]= {}'
-              .format(score, done_trade.timely_trades_count_between_last_3_to_12_months))
+              .format(score, revised_dt.timely_trades_count_between_last_3_to_12_months))
 
         score = rds.get_score_of_rules_done_past_due_trades_of_last_3_months_t22(
-            done_trade.past_due_trades_count_of_last_3_months)
+            revised_dt.past_due_trades_count_of_last_3_months)
         # normalized_score = calculate_normalized_score(T22_RULES_DONE_PAST_DUE_TRADES_OF_LAST_3_MONTHS, score)
         # normalized_done_trades_score += normalized_score
         done_trades_score += score
         self.scores_dict[TIMELINESS_SCORE] = self.scores_dict.get(TIMELINESS_SCORE) + score
         print(
             'score= {}, doneTrades:[past_due_trades_count_of_last_3_months-t22]= {}'.format(score,
-                                                                                            done_trade.past_due_trades_count_of_last_3_months))
+                                                                                            revised_dt.past_due_trades_count_of_last_3_months))
 
         score = rds.get_score_of_rules_done_past_due_trades_between_last_3_to_12_months_t23(
-            done_trade.past_due_trades_count_between_last_3_to_12_months)
+            revised_dt.past_due_trades_count_between_last_3_to_12_months)
         # normalized_score = calculate_normalized_score(T23_RULES_DONE_PAST_DUE_TRADES_BETWEEN_LAST_3_TO_12_MONTHS, score)
         # normalized_done_trades_score += normalized_score
         done_trades_score += score
         self.scores_dict[TIMELINESS_SCORE] = self.scores_dict.get(TIMELINESS_SCORE) + score
         print('score= {}, doneTrades:[past_due_trades_count_between_last_3_to_12_months-t23]= {}'.
-              format(score, done_trade.past_due_trades_count_between_last_3_to_12_months))
+              format(score, revised_dt.past_due_trades_count_between_last_3_to_12_months))
 
         score = rds.get_score_of_rules_done_arrear_trades_of_last_3_months_t24(
-            done_trade.arrear_trades_count_of_last_3_months)
+            revised_dt.arrear_trades_count_of_last_3_months)
         # normalized_score = calculate_normalized_score(T24_RULES_DONE_ARREAR_TRADES_OF_LAST_3_MONTHS, score)
         # normalized_done_trades_score += normalized_score
         done_trades_score += score
         self.scores_dict[TIMELINESS_SCORE] = self.scores_dict.get(TIMELINESS_SCORE) + score
         print('score= {}, doneTrades:[arrear_trades_count_of_last_3_months-t24]= {}'.format(score,
-                                                                                            done_trade.arrear_trades_count_of_last_3_months))
+                                                                                            revised_dt.arrear_trades_count_of_last_3_months))
 
         score = rds.get_score_of_rules_done_arrear_trades_between_last_3_to_12_months_t25(
-            done_trade.arrear_trades_count_between_last_3_to_12_months)
+            revised_dt.arrear_trades_count_between_last_3_to_12_months)
         # normalized_score = calculate_normalized_score(T25_RULES_DONE_ARREAR_TRADES_BETWEEN_LAST_3_TO_12_MONTHS, score)
         # normalized_done_trades_score += normalized_score
         done_trades_score += score
         self.scores_dict[TIMELINESS_SCORE] = self.scores_dict.get(TIMELINESS_SCORE) + score
         print('score= {}, doneTrades:[arrear_trades_count_between_last_3_to_12_months-t25]= {}'
-              .format(score, done_trade.arrear_trades_count_between_last_3_to_12_months))
+              .format(score, revised_dt.arrear_trades_count_between_last_3_to_12_months))
 
         # calculate average of total balance
         # todo: should calculate all users' trades total balance
-        avg_total_balance = 0 if GENERAL_AVG_DEAL_AMOUNT == 0 else done_trade.trades_total_balance / GENERAL_AVG_DEAL_AMOUNT
+        avg_total_balance = 0 if GENERAL_AVG_DEAL_AMOUNT == 0 else revised_dt.trades_total_balance / GENERAL_AVG_DEAL_AMOUNT
         avg_total_balance = float(avg_total_balance)
         score = rds.get_score_of_rules_done_trades_average_total_balance_ratios_v12(avg_total_balance)
         # normalized_score = calculate_normalized_score(V12_RULES_DONE_TRADES_AVERAGE_TOTAL_BALANCE_RATIOS, score)
@@ -196,13 +193,13 @@ class ScoreCalculationService:
         # calculate average of all users delay days
         # todo: should calculate all users' average of done trades delay days (general_avg_delay_days)
         # general_avg_delay_days = 0
-        avg_delay_days = 0 if GENERAL_AVG_DELAY_DAYS == 0 else int(done_trade.total_delay_days) / GENERAL_AVG_DELAY_DAYS
+        avg_delay_days = 0 if GENERAL_AVG_DELAY_DAYS == 0 else int(revised_dt.total_delay_days) / GENERAL_AVG_DELAY_DAYS
         score = rds.get_score_of_rules_done_trades_average_delay_days_t28(avg_delay_days)
         # normalized_score = calculate_normalized_score(T28_RULES_DONE_TRADES_AVERAGE_DELAY_DAYS, score)
         # normalized_done_trades_score += normalized_score
         done_trades_score += score
         self.scores_dict[TIMELINESS_SCORE] = self.scores_dict.get(TIMELINESS_SCORE) + score
-        print('score= {}, doneTrades:[avg_delay_days-t28]= {}'.format(score, done_trade.total_delay_days))
+        print('score= {}, doneTrades:[avg_delay_days-t28]= {}'.format(score, revised_dt.total_delay_days))
 
         # print('............. doneTrades_score = {} , normalized_score = {} ................\n'.
         # format(done_trades_score, normalized_done_trades_score))
@@ -268,7 +265,7 @@ class ScoreCalculationService:
         # normalized_undone_trades_score += normalized_score
         undone_trades_score += score
         self.scores_dict[VOLUMES_SCORE] = self.scores_dict.get(VOLUMES_SCORE) + score
-        print('score= {}, undoneTrades:[past_due_total_balance_ratio-v13]= {}'.format(score,past_due_total_balance_ratio))
+        print('score= {}, undoneTrades:[past_due_total_balance_ratio-v13]= {}'.format(score, past_due_total_balance_ratio))
 
         score = rds.get_score_of_rules_undone_arrear_trades_counts_t27(undone_trade.arrear_trades_count)
         # normalized_score = calculate_normalized_score(T27_RULES_UNDONE_ARREAR_TRADES_COUNTS, score)
@@ -507,3 +504,17 @@ class ScoreCalculationService:
                 .format(timeliness_max_percent, timeliness_max_score, timeliness_pure_score,
                         timeliness_normalized_score))
         return timeliness_normalized_score
+
+    def create_score_change(self, user_id: int, rule_code: str, score_change: int, revised_user_score: int, is_positive_change: bool):
+        rs: ScoreReason = self.ds.get_score_reason_by_rule_code(rule_code)
+        ch: ScoreChange = create_new_score_change(user_id, rule_code, score_change, revised_user_score)
+        if is_positive_change:
+            ch.reason_desc = rs.positive_reason
+        else:
+            ch.reason_desc = rs.negative_reason
+        self.ds.insert_score_change(ch)
+
+    def calculate_user_score_by_impressing_rule_score(self, user_score: int, recent_score: int, revised_score: int):
+        user_score -= recent_score
+        user_score += revised_score
+        return user_score

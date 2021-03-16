@@ -59,9 +59,9 @@ async def get_cheques_status(userId: int):
 
 
 # noinspection PyPep8Naming
-@router.get("/score-time-series/{userId}/month-filter/{month_filter}", response_model=List[ScoreTimeSeriesDTO])
-async def get_score_time_series(userId: int, month_filter: int):
-    return ds.get_score_time_series(userId, month_filter)
+@router.get("/score-time-series/{userId}/filter/{number_of_days}", response_model=List[ScoreTimeSeriesDTO])
+async def get_score_time_series(userId: int, number_of_days: int):
+    return ds.get_score_time_series(userId, number_of_days)
 
 
 # noinspection PyPep8Naming
