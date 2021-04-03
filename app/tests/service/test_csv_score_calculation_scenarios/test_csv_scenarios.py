@@ -12,7 +12,7 @@ from app.core.models.profile import Profile
 from app.core.models.scoring_enums import ProfileMilitaryServiceStatusEnum
 from app.core.models.undone_trades import UndoneTrade
 from app.core.services.data_service import DataService
-from app.core.services.score_calculation_service import ScoreCalculationService
+from app.core.services.score_calculation_service_2 import ScoreCalculationService_2
 
 
 def read_scenarios_dicts_from_csv(csv_path):
@@ -34,7 +34,7 @@ def calculate_score(scenarios_dicts: [], user_id: int = None):
     # mongoengine_api.launch_app()
     ds = DataService()
     rds = RedisCaching(ds)
-    cs = ScoreCalculationService(rds, ds)
+    cs = ScoreCalculationService_2(rds, ds)
     # crm = RedisCachingRulesMasters(rds.rds)
 
     for scn_dict in scenarios_dicts:
@@ -51,7 +51,7 @@ def calculate_score(scenarios_dicts: [], user_id: int = None):
         dt.total_delay_days = scn_dict['AverageDelayRatio']
         # todo: 100000000 is fix Denominator that is all_other_users_done_trades_amount, it should be change later
         dt.trades_total_balance = round(float(scn_dict['SDealAmountRatio']) * ALL_USERS_AVERAGE_DEAL_AMOUNT)
-        done_trades_score = cs.calculate_user_done_trades_score(user_id=0, modified_done_trade=dt)
+        done_trades_score = cs.calculate_user_done_trades_score_2(user_id=0, modified_done_trade=dt)
         ds.delete_done_trades({USER_ID: user_id})
         ds.insert_done_trade(dt)
 
@@ -66,8 +66,8 @@ def calculate_score(scenarios_dicts: [], user_id: int = None):
             float(scn_dict['UnfinishedB30Din1YRatio']) * dt.trades_total_balance)
         udt.arrear_trades_total_balance_of_last_year = round(
             float(scn_dict['UnfinishedA30Din1YRatio']) * dt.trades_total_balance)
-        undone_trades_score = cs.calculate_user_undone_trades_score(user_id=0, undone_trade_object=udt,
-                                                                    done_trade_object=dt)
+        undone_trades_score = cs.calculate_user_undone_trades_score_2(user_id=0, undone_trade_object=udt,
+                                                                      done_trade_object=dt)
         ds.delete_undone_trades({USER_ID: user_id})
         ds.insert_undone_trade(udt)
 
@@ -84,7 +84,7 @@ def calculate_score(scenarios_dicts: [], user_id: int = None):
         ln.arrear_loans_total_balance = round(float(scn_dict['DelayedLoanAmountRatio']) * ln.loans_total_balance)
         ln.suspicious_loans_total_balance = round(
             float(scn_dict['DoubtfulCollectionAmountRatio']) * ln.loans_total_balance)
-        loan_score = cs.calculate_user_loans_score(user_id=0, loan_object=ln)
+        loan_score = cs.calculate_user_loans_score_2(user_id=0, loan_object=ln)
         ds.delete_loans({USER_ID: user_id})
         ds.insert_loan(ln)
 
@@ -96,7 +96,7 @@ def calculate_score(scenarios_dicts: [], user_id: int = None):
         ch.unfixed_returned_cheques_count_of_last_5_years = scn_dict['AllDishonouredCheques']
         ch.unfixed_returned_cheques_total_balance = round(
             float(scn_dict['DCAmountRatio']) * ALL_USERS_AVERAGE_UNFIXED_RETURNED_CHEQUES_AMOUNT)
-        cheque_score: [] = cs.calculate_user_cheques_score(user_id=0, cheque_object=ch)
+        cheque_score: [] = cs.calculate_user_cheques_score_2(user_id=0, cheque_object=ch)
         ds.delete_cheques({USER_ID: user_id})
         ds.insert_cheque(ch)
 
@@ -111,21 +111,21 @@ def calculate_score(scenarios_dicts: [], user_id: int = None):
         p.membership_date = date.today() - timedelta(days=int(scn_dict['Membership']))
         p.recommended_to_others_count = scn_dict['Recommendation']
         p.star_count_average = scn_dict['WeightedAveStars']
-        profile_score = cs.calculate_user_profile_score(user_id=0, profile_object=p)
+        profile_score = cs.calculate_user_profile_score_2(user_id=0, profile_object=p)
 
         # total_pure_score = int(profile_score) + int(done_trades_score) + int(undone_trades_score) + int(loan_score) + int(cheque_score)
 
         identities_pure_score = cs.scores_dict.get(IDENTITIES_SCORE)
-        identities_normalized_score = cs.calculate_identities_normalized_score(identities_pure_score)
+        identities_normalized_score = cs.calculate_identities_normalized_score_2(identities_pure_score)
 
         histories_pure_score = cs.scores_dict.get(HISTORIES_SCORE)
-        histories_normalized_score = cs.calculate_histories_normalized_score(histories_pure_score)
+        histories_normalized_score = cs.calculate_histories_normalized_score_2(histories_pure_score)
 
         volumes_pure_score = cs.scores_dict.get(VOLUMES_SCORE)
-        volumes_normalized_score = cs.calculate_volumes_normalized_score(volumes_pure_score)
+        volumes_normalized_score = cs.calculate_volumes_normalized_score_2(volumes_pure_score)
 
         timeliness_pure_score = cs.scores_dict.get(TIMELINESS_SCORE)
-        timeliness_normalized_score = cs.calculate_timeliness_normalized_score(timeliness_pure_score)
+        timeliness_normalized_score = cs.calculate_timeliness_normalized_score_2(timeliness_pure_score)
 
         total_pure_score = identities_pure_score + histories_pure_score + volumes_pure_score + timeliness_pure_score
         total_normalized_score = identities_normalized_score + histories_normalized_score + volumes_normalized_score + timeliness_normalized_score

@@ -9,7 +9,7 @@ from app.core.models.loans import Loan
 from app.core.models.profile import Profile
 from app.core.models.undone_trades import UndoneTrade
 from app.core.models.scoring_enums import ProfileMilitaryServiceStatusEnum
-from app.core.services.score_calculation_service import ScoreCalculationService
+from app.core.services.score_calculation_service_2 import ScoreCalculationService_2
 from app.core.services import general_data_service as gs
 
 
@@ -95,8 +95,8 @@ class TestScenario1(unittest.TestCase):
     def test_calculate_final_score(self):
         mongoengine_api.launch_app()
         rds = RedisCaching()
-        cs = ScoreCalculationService(rds)
-        cs.calculate_user_final_score(self.uid)
+        cs = ScoreCalculationService_2(rds)
+        cs.calculate_user_final_score_2(self.uid)
 
 
 if __name__ == '__main__':

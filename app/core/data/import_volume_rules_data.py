@@ -6,7 +6,7 @@ from app.core.constants import rules_max_val, PARENT, VOLUMES, CODE, RULE_MASTER
 from app.core.database import get_db
 from app.core.models.rules import Rule
 from app.core.services.data_service import DataService
-from app.core.services.util import create_new_rule, create_new_score_change_reason
+from app.core.services.util import create_new_rule, create_new_score_reason
 
 
 # noinspection DuplicatedCode
@@ -65,9 +65,9 @@ def import_rules_volume_done_trades_total_balance_ratios_v12(ds: DataService):
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Volumes(V) done_trades_total_balance_ratios_v12 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: V12_RULES_DONE_TRADES_AVERAGE_TOTAL_BALANCE_RATIOS})
-    change_reason = create_new_score_change_reason(V12_RULES_DONE_TRADES_AVERAGE_TOTAL_BALANCE_RATIOS, rule_codes, 'افزایش نسبت مبالغ معاملات موفق به میانگین مبالغ معاملات سایر کاربران', 'کاهش نسبت مبالغ معاملات موفق به میانگین مبالغ معاملات سایر کاربران')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: V12_RULES_DONE_TRADES_AVERAGE_TOTAL_BALANCE_RATIOS})
+    change_reason = create_new_score_reason(V12_RULES_DONE_TRADES_AVERAGE_TOTAL_BALANCE_RATIOS, rule_codes, 'افزایش نسبت مبالغ معاملات موفق به میانگین مبالغ معاملات سایر کاربران', 'کاهش نسبت مبالغ معاملات موفق به میانگین مبالغ معاملات سایر کاربران')
+    ds.insert_score_reason(change_reason)
     print('Volumes(V) done_trades_total_balance_ratios_v12 change reasons are created.')
 
 
@@ -114,9 +114,9 @@ def import_rules_volume_undone_past_due_trades_total_balance_of_last_year_ratios
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Volumes(V) undone_past_due_trades_total_balance_of_last_year_ratios_v13 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: V13_RULES_UNDONE_PAST_DUE_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS})
-    change_reason = create_new_score_change_reason(V13_RULES_UNDONE_PAST_DUE_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS, rule_codes, 'کاهش مبالغ معاملات سررسید گذشته خاتمه ‌نیافته', 'افزایش مبالغ معاملات سررسید گذشته خاتمه ‌نیافته')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: V13_RULES_UNDONE_PAST_DUE_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS})
+    change_reason = create_new_score_reason(V13_RULES_UNDONE_PAST_DUE_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS, rule_codes, 'کاهش مبالغ معاملات سررسید گذشته خاتمه ‌نیافته', 'افزایش مبالغ معاملات سررسید گذشته خاتمه ‌نیافته')
+    ds.insert_score_reason(change_reason)
     print('Volumes(V) undone_past_due_trades_total_balance_of_last_year_ratios_v13 change reasons are created.')
 
 
@@ -162,9 +162,9 @@ def import_rules_volume_undone_arrear_trades_total_balance_of_last_year_ratios_v
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Volumes(V) undone_arrear_trades_total_balance_of_last_year_ratios_v14 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: V14_RULES_UNDONE_ARREAR_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS})
-    change_reason = create_new_score_change_reason(V14_RULES_UNDONE_ARREAR_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS, rule_codes, 'کاهش مبالغ معاملات معوق خاتمه ‌نیافته', 'افزایش مبالغ معاملات معوق خاتمه ‌نیافته')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: V14_RULES_UNDONE_ARREAR_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS})
+    change_reason = create_new_score_reason(V14_RULES_UNDONE_ARREAR_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS, rule_codes, 'کاهش مبالغ معاملات معوق خاتمه ‌نیافته', 'افزایش مبالغ معاملات معوق خاتمه ‌نیافته')
+    ds.insert_score_reason(change_reason)
     print('Volumes(V) undone_arrear_trades_total_balance_of_last_year_ratios_v14 change reasons are created.')
 
 
@@ -205,9 +205,9 @@ def import_rules_volume_undone_undue_trades_total_balance_of_last_year_ratios_v1
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Volumes(V) undone_undue_trades_total_balance_of_last_year_ratios_v15 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: V15_RULES_UNDONE_UNDUE_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS})
-    change_reason = create_new_score_change_reason(V15_RULES_UNDONE_UNDUE_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS, rule_codes, 'کاهش نسبت مبالغ معاملات جاری به مجموع مبالغ معاملات موفق', 'افزایش نسبت مبالغ معاملات جاری به مجموع مبالغ معاملات موفق')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: V15_RULES_UNDONE_UNDUE_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS})
+    change_reason = create_new_score_reason(V15_RULES_UNDONE_UNDUE_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS, rule_codes, 'کاهش نسبت مبالغ معاملات جاری به مجموع مبالغ معاملات موفق', 'افزایش نسبت مبالغ معاملات جاری به مجموع مبالغ معاملات موفق')
+    ds.insert_score_reason(change_reason)
     print('Volumes(V) undone_undue_trades_total_balance_of_last_year_ratios_v15 change reasons are created.')
 
 
@@ -232,9 +232,9 @@ def import_rules_volume_loan_monthly_installments_total_balance_ratio_v16(ds: Da
     rule = create_new_rule(3, 'V16', 'V1603P20', 'نسبت بین 0.501 و 1 می‌باشد', 2.56, 20, 0.501, 1)
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: V16_RULES_LOAN_MONTHLY_INSTALLMENTS_TOTAL_BALANCE_RATIOS})
-    change_reason = create_new_score_change_reason(V16_RULES_LOAN_MONTHLY_INSTALLMENTS_TOTAL_BALANCE_RATIOS, rule_codes, 'افزایش امکان سنجش رفتار اعتباری کاربر از طریق اقساط پرداختی', 'کاهش امکان سنجش رفتار اعتباری کاربر از طریق اقساط پرداختی')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: V16_RULES_LOAN_MONTHLY_INSTALLMENTS_TOTAL_BALANCE_RATIOS})
+    change_reason = create_new_score_reason(V16_RULES_LOAN_MONTHLY_INSTALLMENTS_TOTAL_BALANCE_RATIOS, rule_codes, 'افزایش امکان سنجش رفتار اعتباری کاربر از طریق اقساط پرداختی', 'کاهش امکان سنجش رفتار اعتباری کاربر از طریق اقساط پرداختی')
+    ds.insert_score_reason(change_reason)
     print('Volumes(V) loan_monthly_installments_total_balance_ratio_v16 part-1 change reasons are created.')
 
     # 1.001 <= MonthlyInstallments ≤ 1.2	-2	V1604N2	نسبت بین 1.001 و 1.2 می‌باشد
@@ -252,9 +252,9 @@ def import_rules_volume_loan_monthly_installments_total_balance_ratio_v16(ds: Da
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Volumes(V) loan_monthly_installments_total_balance_ratio_v16 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: V16_RULES_LOAN_MONTHLY_INSTALLMENTS_TOTAL_BALANCE_RATIOS})
-    change_reason = create_new_score_change_reason(V16_RULES_LOAN_MONTHLY_INSTALLMENTS_TOTAL_BALANCE_RATIOS, rule_codes, 'کاهش نسبت مبالغ اقساط ماهانه کاربر به میانگین اقساط ماهانه سایر کاربران', 'افزایش نسبت مبالغ اقساط ماهانه کاربر به میانگین اقساط ماهانه سایر کاربران')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: V16_RULES_LOAN_MONTHLY_INSTALLMENTS_TOTAL_BALANCE_RATIOS})
+    change_reason = create_new_score_reason(V16_RULES_LOAN_MONTHLY_INSTALLMENTS_TOTAL_BALANCE_RATIOS, rule_codes, 'کاهش نسبت مبالغ اقساط ماهانه کاربر به میانگین اقساط ماهانه سایر کاربران', 'افزایش نسبت مبالغ اقساط ماهانه کاربر به میانگین اقساط ماهانه سایر کاربران')
+    ds.insert_score_reason(change_reason)
     print('Volumes(V) loan_monthly_installments_total_balance_ratio_v16 part-2 change reasons are created.')
 
 
@@ -297,9 +297,9 @@ def import_rules_volume_unfixed_returned_cheques_total_balance_ratio_v17(ds: Dat
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Volumes(V) unfixed_returned_cheques_total_balance_ratio_v17 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: V17_RULES_CHEQUE_UNFIXED_RETURNED_TOTAL_BALANCE_RATIOS})
-    change_reason = create_new_score_change_reason(V17_RULES_CHEQUE_UNFIXED_RETURNED_TOTAL_BALANCE_RATIOS, rule_codes, 'کاهش مبالغ چک‌های برگشتی رفع سو اثر نشده', 'افزایش مبالغ چک‌های برگشتی رفع سو اثر نشده')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: V17_RULES_CHEQUE_UNFIXED_RETURNED_TOTAL_BALANCE_RATIOS})
+    change_reason = create_new_score_reason(V17_RULES_CHEQUE_UNFIXED_RETURNED_TOTAL_BALANCE_RATIOS, rule_codes, 'کاهش مبالغ چک‌های برگشتی رفع سو اثر نشده', 'افزایش مبالغ چک‌های برگشتی رفع سو اثر نشده')
+    ds.insert_score_reason(change_reason)
     print('Volumes(V) unfixed_returned_cheques_total_balance_ratio_v17 change reasons are created.')
 
 
@@ -325,9 +325,9 @@ def import_rules_volume_overdue_loans_total_balance_ratio_v18(ds: DataService):
     rule = create_new_rule(3, 'V18', 'V1803P10', 'نسبت بین 0.501 و 1 می‌باشد', 1.28, 10, 0.501, 1)
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: V18_RULES_LOAN_OVERDUE_TOTAL_BALANCE_RATIOS})
-    change_reason = create_new_score_change_reason(V18_RULES_LOAN_OVERDUE_TOTAL_BALANCE_RATIOS, rule_codes, 'افزایش امکان سنجش رفتار اعتباری کاربر از طریق مانده جاری تسهیلات', 'کاهش امکان سنجش رفتار اعتباری کاربر از طریق مانده جاری تسهیلات')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: V18_RULES_LOAN_OVERDUE_TOTAL_BALANCE_RATIOS})
+    change_reason = create_new_score_reason(V18_RULES_LOAN_OVERDUE_TOTAL_BALANCE_RATIOS, rule_codes, 'افزایش امکان سنجش رفتار اعتباری کاربر از طریق مانده جاری تسهیلات', 'کاهش امکان سنجش رفتار اعتباری کاربر از طریق مانده جاری تسهیلات')
+    ds.insert_score_reason(change_reason)
     print('Volumes(V) overdue_loans_total_balance_ratio_v18 part-1 change reasons are created.')
 
     # 1.001 <= CurrentLoanAmountRatio ≤ 1.5	-05	V1804N5	نسبت بین 1.001 و 1.5 می‌باشد
@@ -345,9 +345,9 @@ def import_rules_volume_overdue_loans_total_balance_ratio_v18(ds: DataService):
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Volumes(V) overdue_loans_total_balance_ratio_v18 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: V18_RULES_LOAN_OVERDUE_TOTAL_BALANCE_RATIOS})
-    change_reason = create_new_score_change_reason(V18_RULES_LOAN_OVERDUE_TOTAL_BALANCE_RATIOS, rule_codes, '', '')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: V18_RULES_LOAN_OVERDUE_TOTAL_BALANCE_RATIOS})
+    change_reason = create_new_score_reason(V18_RULES_LOAN_OVERDUE_TOTAL_BALANCE_RATIOS, rule_codes, '', '')
+    ds.insert_score_reason(change_reason)
     print('Volumes(V) overdue_loans_total_balance_ratio_v18 part-2 change reasons are created.')
 
 
@@ -389,9 +389,9 @@ def import_rules_volume_past_due_loans_total_balance_ratio_v19(ds: DataService):
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Volumes(V) past_due_loans_total_balance_ratio_v19 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: V19_RULES_LOAN_PAST_DUE_TOTAL_BALANCE_RATIOS})
-    change_reason = create_new_score_change_reason(V19_RULES_LOAN_PAST_DUE_TOTAL_BALANCE_RATIOS, rule_codes, 'کاهش نسبت مانده تسهیلات سررسیدگذشته به مجموع اصل و سود تسهیلات در جریان', 'افزایش نسبت مانده تسهیلات سررسیدگذشته به مجموع اصل و سود تسهیلات در جریان')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: V19_RULES_LOAN_PAST_DUE_TOTAL_BALANCE_RATIOS})
+    change_reason = create_new_score_reason(V19_RULES_LOAN_PAST_DUE_TOTAL_BALANCE_RATIOS, rule_codes, 'کاهش نسبت مانده تسهیلات سررسیدگذشته به مجموع اصل و سود تسهیلات در جریان', 'افزایش نسبت مانده تسهیلات سررسیدگذشته به مجموع اصل و سود تسهیلات در جریان')
+    ds.insert_score_reason(change_reason)
     print('Volumes(V) past_due_loans_total_balance_ratio_v19 change reasons are created.')
 
 
@@ -433,9 +433,9 @@ def import_rules_volume_arrear_loans_total_balance_ratios_v20(ds: DataService):
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Volumes(V) arrear_loans_total_balance_ratios_v20 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: V20_RULES_LOAN_ARREAR_TOTAL_BALANCE_RATIOS})
-    change_reason = create_new_score_change_reason(V20_RULES_LOAN_ARREAR_TOTAL_BALANCE_RATIOS, rule_codes, 'کاهش نسبت مانده تسهیلات معوق به مجموع اصل و سود تسهیلات در جریان', 'افزایش نسبت مانده تسهیلات معوق به مجموع اصل و سود تسهیلات در جریان')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: V20_RULES_LOAN_ARREAR_TOTAL_BALANCE_RATIOS})
+    change_reason = create_new_score_reason(V20_RULES_LOAN_ARREAR_TOTAL_BALANCE_RATIOS, rule_codes, 'کاهش نسبت مانده تسهیلات معوق به مجموع اصل و سود تسهیلات در جریان', 'افزایش نسبت مانده تسهیلات معوق به مجموع اصل و سود تسهیلات در جریان')
+    ds.insert_score_reason(change_reason)
     print('Volumes(V) arrear_loans_total_balance_ratios_v20 change reasons are created.')
 
 
@@ -477,9 +477,9 @@ def import_rules_volume_suspicious_loans_total_balance_ratio_v21(ds: DataService
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Volumes(V) suspicious_loans_total_balance_ratio_v21 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: V21_RULES_LOAN_SUSPICIOUS_TOTAL_BALANCE_RATIOS})
-    change_reason = create_new_score_change_reason(V21_RULES_LOAN_SUSPICIOUS_TOTAL_BALANCE_RATIOS, rule_codes, 'کاهش نسبت مانده تسهیلات مشکوک‌الوصول به مجموع اصل و سود تسهیلات در جریان', 'افزایش نسبت مانده تسهیلات مشکوک‌الوصول به مجموع اصل و سود تسهیلات در جریان')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: V21_RULES_LOAN_SUSPICIOUS_TOTAL_BALANCE_RATIOS})
+    change_reason = create_new_score_reason(V21_RULES_LOAN_SUSPICIOUS_TOTAL_BALANCE_RATIOS, rule_codes, 'کاهش نسبت مانده تسهیلات مشکوک‌الوصول به مجموع اصل و سود تسهیلات در جریان', 'افزایش نسبت مانده تسهیلات مشکوک‌الوصول به مجموع اصل و سود تسهیلات در جریان')
+    ds.insert_score_reason(change_reason)
     print('Volumes(V) suspicious_loans_total_balance_ratio_v21 part-1 change reasons are created.')
 
 

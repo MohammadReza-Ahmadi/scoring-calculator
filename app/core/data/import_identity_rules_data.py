@@ -1,11 +1,11 @@
 from typing import List
 
-from app.core.constants import PARENT, IDENTITIES, CODE, I2_RULES_PROFILE_MILITARY_SERVICE_STATUS, I3_RULES_PROFILE_SIM_CARD_OWNERSHIPS, I4_RULES_PROFILE_ADDRESS_VERIFICATIONS, RULE_MASTER_CODE
+from app.core.constants import PARENT, IDENTITIES, CODE, I2_RULES_PROFILE_MILITARY_SERVICE_STATUS, I3_RULES_PROFILE_SIM_CARD_OWNERSHIPS, I4_RULES_PROFILE_ADDRESS_VERIFICATIONS, RULE_MASTER_CODE, I1_RULES_PROFILE_HAS_KYCS
 from app.core.database import get_db
 from app.core.models.rules import Rule
 from app.core.models.scoring_enums import ProfileMilitaryServiceStatusEnum
 from app.core.services.data_service import DataService
-from app.core.services.util import create_new_rule, create_new_score_change_reason
+from app.core.services.util import create_new_rule, create_new_score_reason
 
 
 # noinspection DuplicatedCode
@@ -39,11 +39,17 @@ def import_rules_identity_has_kycs_i1(ds: DataService):
     # KYC = Yes	40	I0101P40    %4	احراز هویت نهایی از طریق استعلام ثبت احوال
     rule = create_new_rule(3, 'I1', 'I0101P40', 'احراز هویت نهایی از طریق استعلام ثبت احوال', 4, 40, 1)
     ds.insert_rule(rule)
+    rule_codes: List[str] = [rule.code]
 
     # KYC = No	00	I0102P0 0%	عدم احراز هویت
     rule = create_new_rule(3, 'I1', 'I0102P0', 'عدم احراز هویت', 0, 0, 0)
     ds.insert_rule(rule)
+    rule_codes.append(rule.code)
     print('Identities(I) has_kycs_i1 rules are created.')
+    ds.delete_score_reasons({RULE_MASTER_CODE: I1_RULES_PROFILE_HAS_KYCS})
+    change_reason = create_new_score_reason(I1_RULES_PROFILE_HAS_KYCS, rule_codes, 'احراز هویت نهایی از طریق استعلام ثبت احوال')
+    ds.insert_score_reason(change_reason)
+    print('Identities(I) has_kycs_i1 change reasons are created.')
 
 
 def import_rules_identity_military_service_status_i2(ds: DataService):
@@ -77,9 +83,9 @@ def import_rules_identity_military_service_status_i2(ds: DataService):
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Identities(I) military_service_status_i2 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: I2_RULES_PROFILE_MILITARY_SERVICE_STATUS})
-    change_reason = create_new_score_change_reason(I2_RULES_PROFILE_MILITARY_SERVICE_STATUS, rule_codes, 'بهبود وضعیت خدمت وظیفه عمومی', 'تنزل وضعیت خدمت وظیفه عمومی')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: I2_RULES_PROFILE_MILITARY_SERVICE_STATUS})
+    change_reason = create_new_score_reason(I2_RULES_PROFILE_MILITARY_SERVICE_STATUS, rule_codes, 'بهبود وضعیت خدمت وظیفه عمومی', 'تنزل وضعیت خدمت وظیفه عمومی')
+    ds.insert_score_reason(change_reason)
     print('Identities(I) military_service_status_i2 change reasons are created.')
 
 
@@ -99,9 +105,9 @@ def import_rules_identity_sim_card_ownerships_i3(ds: DataService):
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Identities(I) sim_card_ownerships_i3 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: I3_RULES_PROFILE_SIM_CARD_OWNERSHIPS})
-    change_reason = create_new_score_change_reason(I3_RULES_PROFILE_SIM_CARD_OWNERSHIPS, rule_codes, 'تایید مالکیت خط تلفن همراه', 'عدم تایید مالکیت خط تلفن همراه')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: I3_RULES_PROFILE_SIM_CARD_OWNERSHIPS})
+    change_reason = create_new_score_reason(I3_RULES_PROFILE_SIM_CARD_OWNERSHIPS, rule_codes, 'تایید مالکیت خط تلفن همراه', 'عدم تایید مالکیت خط تلفن همراه')
+    ds.insert_score_reason(change_reason)
     print('Identities(I) sim_card_ownerships_i3 change reasons are created.')
 
 
@@ -121,9 +127,9 @@ def import_rules_identity_address_verifications_i4(ds: DataService):
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Identities(I) address_verifications_i4 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: I4_RULES_PROFILE_ADDRESS_VERIFICATIONS})
-    change_reason = create_new_score_change_reason(I4_RULES_PROFILE_ADDRESS_VERIFICATIONS, rule_codes, 'تایید نشانی محل سکونت', 'عدم تایید نشانی محل سکونت')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: I4_RULES_PROFILE_ADDRESS_VERIFICATIONS})
+    change_reason = create_new_score_reason(I4_RULES_PROFILE_ADDRESS_VERIFICATIONS, rule_codes, 'تایید نشانی محل سکونت', 'عدم تایید نشانی محل سکونت')
+    ds.insert_score_reason(change_reason)
     print('Identities(I) address_verifications_i4 change reasons are created.')
 
 

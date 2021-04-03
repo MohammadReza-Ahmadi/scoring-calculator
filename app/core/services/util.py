@@ -20,7 +20,7 @@ from app.core.models.profile import Profile
 from app.core.models.rules import Rule
 from app.core.models.score_changes import ScoreChange
 # noinspection DuplicatedCode
-from app.core.models.score_changes_reasons import ScoreReason
+from app.core.models.score_reasons import ScoreReason
 # noinspection DuplicatedCode
 from app.core.settings import max_score
 
@@ -39,7 +39,7 @@ def create_new_rule(level, parent: str, code: str, title: str, impact_percent: f
     return rule
 
 
-def create_new_score_change_reason(rule_master_code: str, rule_codes: List[str], positive_reason: str, negative_reason: str = None):
+def create_new_score_reason(rule_master_code: str, rule_codes: List[str], positive_reason: str, negative_reason: str = None):
     scr = ScoreReason()
     scr.rule_master_code = rule_master_code
     scr.rule_codes = rule_codes
@@ -268,7 +268,7 @@ def is_not_none(obj) -> bool:
     return bool(obj)
 
 
-def get_zero_if_null(num):
+def get_zero_if_none(num):
     return ZERO if num is None else num
 
 

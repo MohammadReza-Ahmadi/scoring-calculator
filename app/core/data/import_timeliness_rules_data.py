@@ -7,7 +7,7 @@ from app.core.constants import rules_max_val, TIMELINESS, PARENT, CODE, T22_RULE
 from app.core.database import get_db
 from app.core.models.rules import Rule
 from app.core.services.data_service import DataService
-from app.core.services.util import create_new_rule, create_new_score_change_reason
+from app.core.services.util import create_new_rule, create_new_score_reason
 
 
 # noinspection DuplicatedCode
@@ -69,9 +69,9 @@ def import_rules_timeliness_done_past_due_trades_of_last_3_months_t22(ds: DataSe
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Timeliness(T) done_past_due_trades_of_last_3_months_t22 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: T22_RULES_DONE_PAST_DUE_TRADES_OF_LAST_3_MONTHS})
-    change_reason = create_new_score_change_reason(T22_RULES_DONE_PAST_DUE_TRADES_OF_LAST_3_MONTHS, rule_codes, 'کاهش تعداد معاملات سررسید گذشته خاتمه یافته در سه ماه گذشته', 'افزایش تعداد معاملات سررسید گذشته خاتمه یافته در سه ماه گذشته')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: T22_RULES_DONE_PAST_DUE_TRADES_OF_LAST_3_MONTHS})
+    change_reason = create_new_score_reason(T22_RULES_DONE_PAST_DUE_TRADES_OF_LAST_3_MONTHS, rule_codes, 'کاهش تعداد معاملات سررسید گذشته خاتمه یافته در سه ماه گذشته', 'افزایش تعداد معاملات سررسید گذشته خاتمه یافته در سه ماه گذشته')
+    ds.insert_score_reason(change_reason)
     print('Timeliness(T) done_past_due_trades_of_last_3_months_t22 change reasons are created.')
 
 
@@ -112,9 +112,9 @@ def import_rules_timeliness_done_past_due_trades_between_last_3_to_12_months_t23
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Timeliness(T) done_past_due_trades_between_last_3_to_12_months_t23 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: T23_RULES_DONE_PAST_DUE_TRADES_BETWEEN_LAST_3_TO_12_MONTHS})
-    change_reason = create_new_score_change_reason(T23_RULES_DONE_PAST_DUE_TRADES_BETWEEN_LAST_3_TO_12_MONTHS, rule_codes, 'کاهش تعداد معاملات سررسید گذشته خاتمه یافته در یک سال گذشته', 'افزایش تعداد معاملات سررسید گذشته خاتمه یافته در یک سال گذشته')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: T23_RULES_DONE_PAST_DUE_TRADES_BETWEEN_LAST_3_TO_12_MONTHS})
+    change_reason = create_new_score_reason(T23_RULES_DONE_PAST_DUE_TRADES_BETWEEN_LAST_3_TO_12_MONTHS, rule_codes, 'کاهش تعداد معاملات سررسید گذشته خاتمه یافته در یک سال گذشته', 'افزایش تعداد معاملات سررسید گذشته خاتمه یافته در یک سال گذشته')
+    ds.insert_score_reason(change_reason)
     print('Timeliness(T) done_past_due_trades_between_last_3_to_12_months_t23 change reasons are created.')
 
 
@@ -154,9 +154,9 @@ def import_rules_timeliness_done_arrear_trades_of_last_3_months_t24(ds: DataServ
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Timeliness(T) done_arrear_trades_of_last_3_months_t24 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: T24_RULES_DONE_ARREAR_TRADES_OF_LAST_3_MONTHS})
-    change_reason = create_new_score_change_reason(T24_RULES_DONE_ARREAR_TRADES_OF_LAST_3_MONTHS, rule_codes, 'کاهش تعداد معاملات معوق خاتمه یافته در سه ماه گذشته', 'افزایش تعداد معاملات معوق خاتمه یافته در سه ماه گذشته')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: T24_RULES_DONE_ARREAR_TRADES_OF_LAST_3_MONTHS})
+    change_reason = create_new_score_reason(T24_RULES_DONE_ARREAR_TRADES_OF_LAST_3_MONTHS, rule_codes, 'کاهش تعداد معاملات معوق خاتمه یافته در سه ماه گذشته', 'افزایش تعداد معاملات معوق خاتمه یافته در سه ماه گذشته')
+    ds.insert_score_reason(change_reason)
     print('Timeliness(T) done_arrear_trades_of_last_3_months_t24 change reasons are created.')
 
 
@@ -196,9 +196,9 @@ def import_rules_timeliness_done_arrear_trades_between_last_3_to_12_months_t25(d
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Timeliness(T) arrear_trades_between_last_3_to_12_months_t25 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: T25_RULES_DONE_ARREAR_TRADES_BETWEEN_LAST_3_TO_12_MONTHS})
-    change_reason = create_new_score_change_reason(T25_RULES_DONE_ARREAR_TRADES_BETWEEN_LAST_3_TO_12_MONTHS, rule_codes, 'کاهش تعداد معاملات معوق خاتمه یافته در یک سال گذشته', 'افزایش تعداد معاملات معوق خاتمه یافته در یک سال گذشته')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: T25_RULES_DONE_ARREAR_TRADES_BETWEEN_LAST_3_TO_12_MONTHS})
+    change_reason = create_new_score_reason(T25_RULES_DONE_ARREAR_TRADES_BETWEEN_LAST_3_TO_12_MONTHS, rule_codes, 'کاهش تعداد معاملات معوق خاتمه یافته در یک سال گذشته', 'افزایش تعداد معاملات معوق خاتمه یافته در یک سال گذشته')
+    ds.insert_score_reason(change_reason)
     print('Timeliness(T) arrear_trades_between_last_3_to_12_months_t25 change reasons are created.')
 
 
@@ -239,9 +239,9 @@ def import_rules_timeliness_undone_past_due_trades_counts_t26(ds: DataService):
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Timeliness(T) timeliness_undone_past_due_trades_counts_t26 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: T26_RULES_UNDONE_PAST_DUE_TRADES_COUNTS})
-    change_reason = create_new_score_change_reason(T26_RULES_UNDONE_PAST_DUE_TRADES_COUNTS, rule_codes, 'کاهش تعداد معاملات سررسید گذشته خاتمه نیافته در سه ماه گذشته', 'افزایش تعداد معاملات سررسید گذشته خاتمه نیافته در سه ماه گذشته')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: T26_RULES_UNDONE_PAST_DUE_TRADES_COUNTS})
+    change_reason = create_new_score_reason(T26_RULES_UNDONE_PAST_DUE_TRADES_COUNTS, rule_codes, 'کاهش تعداد معاملات سررسید گذشته خاتمه نیافته در سه ماه گذشته', 'افزایش تعداد معاملات سررسید گذشته خاتمه نیافته در سه ماه گذشته')
+    ds.insert_score_reason(change_reason)
     print('Timeliness(T) timeliness_undone_past_due_trades_counts_t26 change reasons are created.')
 
 
@@ -282,9 +282,9 @@ def import_rules_timeliness_undone_arrear_trades_counts_t27(ds: DataService):
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Timeliness(T) undone_arrear_trades_counts_t27 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: T27_RULES_UNDONE_ARREAR_TRADES_COUNTS})
-    change_reason = create_new_score_change_reason(T27_RULES_UNDONE_ARREAR_TRADES_COUNTS, rule_codes, 'کاهش تعداد معاملات معوق خاتمه نیافته در سه ماه گذشته', 'افزایش تعداد معاملات معوق خاتمه نیافته در سه ماه گذشته')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: T27_RULES_UNDONE_ARREAR_TRADES_COUNTS})
+    change_reason = create_new_score_reason(T27_RULES_UNDONE_ARREAR_TRADES_COUNTS, rule_codes, 'کاهش تعداد معاملات معوق خاتمه نیافته در سه ماه گذشته', 'افزایش تعداد معاملات معوق خاتمه نیافته در سه ماه گذشته')
+    ds.insert_score_reason(change_reason)
     print('Timeliness(T) undone_arrear_trades_counts_t27 change reasons are created.')
 
 
@@ -324,9 +324,9 @@ def import_rules_timeliness_done_trades_average_delay_days_ratios_t28(ds: DataSe
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Timeliness(T) done_trades_average_delay_days_ratios_t28 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: T28_RULES_DONE_TRADES_AVERAGE_DELAY_DAYS})
-    change_reason = create_new_score_change_reason(T28_RULES_DONE_TRADES_AVERAGE_DELAY_DAYS, rule_codes, 'کاهش تاخیر کاربر در انجام معاملات نسبت به سایر کاربران', 'افزایش تاخیر کاربر در انجام معاملات نسبت به سایر کاربران')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: T28_RULES_DONE_TRADES_AVERAGE_DELAY_DAYS})
+    change_reason = create_new_score_reason(T28_RULES_DONE_TRADES_AVERAGE_DELAY_DAYS, rule_codes, 'کاهش تاخیر کاربر در انجام معاملات نسبت به سایر کاربران', 'افزایش تاخیر کاربر در انجام معاملات نسبت به سایر کاربران')
+    ds.insert_score_reason(change_reason)
     print('Timeliness(T) done_trades_average_delay_days_ratios_t28 change reasons are created.')
 
 
@@ -361,9 +361,9 @@ def import_rules_timeliness_unfixed_returned_cheques_count_of_last_3_months_t29(
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Timeliness(T) unfixed_returned_cheques_count_of_last_3_months_t29 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: T29_RULES_CHEQUE_UNFIXED_RETURNED_COUNT_OF_LAST_3_MONTHS})
-    change_reason = create_new_score_change_reason(T29_RULES_CHEQUE_UNFIXED_RETURNED_COUNT_OF_LAST_3_MONTHS, rule_codes, 'کاهش تعداد چک‌های برگشتی رفع سو اثر نشده در سه ماه گذشته', 'افزایش تعداد چک‌های برگشتی رفع سو اثر نشده در سه ماه گذشته')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: T29_RULES_CHEQUE_UNFIXED_RETURNED_COUNT_OF_LAST_3_MONTHS})
+    change_reason = create_new_score_reason(T29_RULES_CHEQUE_UNFIXED_RETURNED_COUNT_OF_LAST_3_MONTHS, rule_codes, 'کاهش تعداد چک‌های برگشتی رفع سو اثر نشده در سه ماه گذشته', 'افزایش تعداد چک‌های برگشتی رفع سو اثر نشده در سه ماه گذشته')
+    ds.insert_score_reason(change_reason)
     print('Timeliness(T) unfixed_returned_cheques_count_of_last_3_months_t29 rules are created.')
 
 
@@ -398,9 +398,9 @@ def import_rules_timeliness_unfixed_returned_cheques_count_between_last_3_to_12_
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Timeliness(T) unfixed_returned_cheques_count_between_last_3_to_12_months_t30 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: T30_RULES_CHEQUE_UNFIXED_RETURNED_COUNT_BETWEEN_LAST_3_TO_12_MONTHS})
-    change_reason = create_new_score_change_reason(T30_RULES_CHEQUE_UNFIXED_RETURNED_COUNT_BETWEEN_LAST_3_TO_12_MONTHS, rule_codes, 'کاهش تعداد چک‌های برگشتی رفع سو اثر نشده در یک سال گذشته', 'افزایش تعداد چک‌های برگشتی رفع سو اثر نشده در یک سال گذشته')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: T30_RULES_CHEQUE_UNFIXED_RETURNED_COUNT_BETWEEN_LAST_3_TO_12_MONTHS})
+    change_reason = create_new_score_reason(T30_RULES_CHEQUE_UNFIXED_RETURNED_COUNT_BETWEEN_LAST_3_TO_12_MONTHS, rule_codes, 'کاهش تعداد چک‌های برگشتی رفع سو اثر نشده در یک سال گذشته', 'افزایش تعداد چک‌های برگشتی رفع سو اثر نشده در یک سال گذشته')
+    ds.insert_score_reason(change_reason)
     print('Timeliness(T) unfixed_returned_cheques_count_between_last_3_to_12_months_t30 change reasons are created.')
 
 
@@ -435,9 +435,9 @@ def import_rules_timeliness_unfixed_returned_cheques_count_of_more_12_months_t31
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Timeliness(T) unfixed_returned_cheques_count_of_more_12_months_t31 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: T31_RULES_CHEQUE_UNFIXED_RETURNED_COUNT_OF_MORE_12_MONTHS})
-    change_reason = create_new_score_change_reason(T31_RULES_CHEQUE_UNFIXED_RETURNED_COUNT_OF_MORE_12_MONTHS, rule_codes, 'کاهش تعداد چک‌های برگشتی رفع سو اثر نشده در بیش از یک سال گذشته', 'افزایش تعداد چک‌های برگشتی رفع سو اثر نشده در بیش از یک سال گذشته')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: T31_RULES_CHEQUE_UNFIXED_RETURNED_COUNT_OF_MORE_12_MONTHS})
+    change_reason = create_new_score_reason(T31_RULES_CHEQUE_UNFIXED_RETURNED_COUNT_OF_MORE_12_MONTHS, rule_codes, 'کاهش تعداد چک‌های برگشتی رفع سو اثر نشده در بیش از یک سال گذشته', 'افزایش تعداد چک‌های برگشتی رفع سو اثر نشده در بیش از یک سال گذشته')
+    ds.insert_score_reason(change_reason)
     print('Timeliness(T) unfixed_returned_cheques_count_of_more_12_months_t31 change reasons are created.')
 
 
@@ -472,9 +472,9 @@ def import_rules_timeliness_unfixed_returned_cheques_count_of_last_5_years_t32(d
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Timeliness(T) unfixed_returned_cheques_count_of_last_5_years_t32 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: T32_RULES_CHEQUE_UNFIXED_RETURNED_COUNT_OF_LAST_5_YEARS})
-    change_reason = create_new_score_change_reason(T32_RULES_CHEQUE_UNFIXED_RETURNED_COUNT_OF_LAST_5_YEARS, rule_codes, 'کاهش تعداد چک‌های برگشتی رفع سو اثر شده در پنج سال گذشته', 'افزایش تعداد چک‌های برگشتی رفع سو اثر شده در پنج سال گذشته')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: T32_RULES_CHEQUE_UNFIXED_RETURNED_COUNT_OF_LAST_5_YEARS})
+    change_reason = create_new_score_reason(T32_RULES_CHEQUE_UNFIXED_RETURNED_COUNT_OF_LAST_5_YEARS, rule_codes, 'کاهش تعداد چک‌های برگشتی رفع سو اثر شده در پنج سال گذشته', 'افزایش تعداد چک‌های برگشتی رفع سو اثر شده در پنج سال گذشته')
+    ds.insert_score_reason(change_reason)
     print('Timeliness(T) unfixed_returned_cheques_count_of_last_5_years_t32 change reasons are created.')
 
 
@@ -509,9 +509,9 @@ def import_rules_timeliness_past_due_loans_total_count_t33(ds: DataService):
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Timeliness(T) past_due_loans_total_count_t33 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: T33_RULES_LOAN_PAST_DUE_TOTAL_COUNTS})
-    change_reason = create_new_score_change_reason(T33_RULES_LOAN_PAST_DUE_TOTAL_COUNTS, rule_codes, 'کاهش تعداد تسهیلات سررسید گذشته در جریان', 'افزایش تعداد تسهیلات سررسید گذشته در جریان')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: T33_RULES_LOAN_PAST_DUE_TOTAL_COUNTS})
+    change_reason = create_new_score_reason(T33_RULES_LOAN_PAST_DUE_TOTAL_COUNTS, rule_codes, 'کاهش تعداد تسهیلات سررسید گذشته در جریان', 'افزایش تعداد تسهیلات سررسید گذشته در جریان')
+    ds.insert_score_reason(change_reason)
     print('Timeliness(T) past_due_loans_total_count_t33 change reasons are created.')
 
 
@@ -546,9 +546,9 @@ def import_rules_timeliness_arrear_loans_total_count_t34(ds: DataService):
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Timeliness(T) arrear_loans_total_count_t34 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: T34_RULES_LOAN_ARREAR_TOTAL_COUNTS})
-    change_reason = create_new_score_change_reason(T34_RULES_LOAN_ARREAR_TOTAL_COUNTS, rule_codes, 'کاهش تعداد تسهیلات معوق در جریان', 'افزایش تعداد تسهیلات معوق در جریان')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: T34_RULES_LOAN_ARREAR_TOTAL_COUNTS})
+    change_reason = create_new_score_reason(T34_RULES_LOAN_ARREAR_TOTAL_COUNTS, rule_codes, 'کاهش تعداد تسهیلات معوق در جریان', 'افزایش تعداد تسهیلات معوق در جریان')
+    ds.insert_score_reason(change_reason)
     print('Timeliness(T) arrear_loans_total_count_t34 change reasons are created.')
 
 
@@ -583,9 +583,9 @@ def import_rules_timeliness_suspicious_loans_total_count_t35(ds: DataService):
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Timeliness(T) suspicious_loans_total_count_t35 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: T35_RULES_LOAN_SUSPICIOUS_TOTAL_COUNTS})
-    change_reason = create_new_score_change_reason(T35_RULES_LOAN_SUSPICIOUS_TOTAL_COUNTS, rule_codes, 'کاهش تعداد تسهیلات مشکوک الوصول در جریان', 'افزایش تعداد تسهیلات مشکوک الوصول در جریان')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: T35_RULES_LOAN_SUSPICIOUS_TOTAL_COUNTS})
+    change_reason = create_new_score_reason(T35_RULES_LOAN_SUSPICIOUS_TOTAL_COUNTS, rule_codes, 'کاهش تعداد تسهیلات مشکوک الوصول در جریان', 'افزایش تعداد تسهیلات مشکوک الوصول در جریان')
+    ds.insert_score_reason(change_reason)
     print('Timeliness(T) suspicious_loans_total_count_t35 change reasons are created.')
 
 

@@ -26,14 +26,14 @@ from app.core.models.loans import Loan
 from app.core.models.profile import Profile
 from app.core.models.rules import Rule
 from app.core.models.score_changes import ScoreChange
-from app.core.models.score_changes_reasons import ScoreReason
 from app.core.models.score_gauges import ScoreGauge
+from app.core.models.score_reasons import ScoreReason
 from app.core.models.score_time_series import ScoreTimeSeries
 from app.core.models.undone_trades import UndoneTrade
 from app.core.services.scores_distributions_pipeline_generator import generate_scores_distributions_pipeline
 from app.core.services.util import create_score_status_dto, create_vosouq_status_dto, calculate_dates_diff, \
     create_loan_status_dto, create_cheque_status_dto, \
-    get_zero_if_null, create_score_details_dto, get_second_item, create_score_changes_dto
+    get_zero_if_none, create_score_details_dto, get_second_item, create_score_changes_dto
 from app.core.settings import min_score, max_score, distribution_count
 
 
@@ -101,6 +101,19 @@ class DataService:
             p.membership_date = datetime.combine(p.membership_date, datetime.min.time())
         self.db.profiles.insert_one(dict(p))
 
+    def update_profile(self, p: Profile):
+        p.membership_date = datetime.combine(p.membership_date, datetime.min.time())
+        self.db.profiles.update_one(
+            {USER_ID: p.user_id},
+            {'$set': dict(p)},
+            upsert=False)
+
+    def insert_or_update_profile(self, p: Profile, update_flag: bool = False):
+        if update_flag:
+            self.update_profile(p)
+        else:
+            self.insert_profile(p)
+
     def delete_profiles(self, filter_dict: {}) -> None:
         self.db.profiles.delete_many(filter_dict)
 
@@ -123,6 +136,18 @@ class DataService:
     # DONE-TRADE SERVICES ................................................
     def insert_done_trade(self, dt: DoneTrade):
         self.db.doneTrades.insert_one(dict(dt))
+
+    def update_done_trade(self, dt: DoneTrade):
+        self.db.doneTrades.update_one(
+            {USER_ID: dt.user_id},
+            {'$set': dict(dt)},
+            upsert=False)
+
+    def insert_or_update_done_trade(self, dt: DoneTrade, update_flag: bool = False):
+        if update_flag:
+            self.update_done_trade(dt)
+        else:
+            self.insert_done_trade(dt)
 
     def delete_done_trades(self, filter_dict: {}) -> None:
         self.db.doneTrades.delete_many(filter_dict)
@@ -212,17 +237,17 @@ class DataService:
             return Cheque()
         return Cheque.parse_obj(dic)
 
-    # SCORE CHANGE REASON SERVICES ................................................
-    def insert_score_change_reason(self, scr: ScoreReason):
-        self.db.scoreChangeReasons.insert_one(dict(scr))
+    # SCORE REASON SERVICES ................................................
+    def insert_score_reason(self, scr: ScoreReason):
+        self.db.scoreReasons.insert_one(dict(scr))
 
-    def delete_score_change_reasons(self, filter_dict: {}) -> None:
-        self.db.scoreChangeReasons.delete_many(filter_dict)
+    def delete_score_reasons(self, filter_dict: {}) -> None:
+        self.db.scoreReasons.delete_many(filter_dict)
 
     def get_score_reason_by_rule_code(self, rule_code: str) -> ScoreReason:
         if rule_code is None:
             raise ScoringException(2, 'rule_code is empty!')
-        dic = self.db.scoreChangeReasons.find({RULE_CODES: rule_code})
+        dic = self.db.scoreReasons.find_one({RULE_CODES: rule_code})
         if dic is None:
             return ScoreReason()
         return ScoreReason.parse_obj(dic)
@@ -236,7 +261,7 @@ class DataService:
         return parse_obj_as(List[ScoreChange], ret_list)
 
     def insert_score_change(self, sc: ScoreChange):
-        self.db.scoreChange.insert_one(dict(sc))
+        self.db.scoreChanges.insert_one(dict(sc))
 
     # REST SERVICES ................................................
     def get_score_boundaries(self) -> ScoreBoundariesDTO:
@@ -278,17 +303,17 @@ class DataService:
         # load doneTrade
         dt: DoneTrade = self.get_user_done_trade(user_id)
         # calc all doneTrades count
-        dt_count = get_zero_if_null(dt.timely_trades_count_of_last_3_months) + get_zero_if_null(
+        dt_count = get_zero_if_none(dt.timely_trades_count_of_last_3_months) + get_zero_if_none(
             dt.timely_trades_count_between_last_3_to_12_months) \
-                   + get_zero_if_null(dt.past_due_trades_count_of_last_3_months) + get_zero_if_null(
+                   + get_zero_if_none(dt.past_due_trades_count_of_last_3_months) + get_zero_if_none(
             dt.past_due_trades_count_between_last_3_to_12_months) \
-                   + get_zero_if_null(dt.arrear_trades_count_of_last_3_months) + get_zero_if_null(
+                   + get_zero_if_none(dt.arrear_trades_count_of_last_3_months) + get_zero_if_none(
             dt.arrear_trades_count_between_last_3_to_12_months)
         # calc delayed doneTrades count
         delay_days_avg = 0
         if dt_count > 0:
             delayed_dt_count = dt_count - (
-                    get_zero_if_null(dt.timely_trades_count_of_last_3_months) + get_zero_if_null(
+                    get_zero_if_none(dt.timely_trades_count_of_last_3_months) + get_zero_if_none(
                 dt.timely_trades_count_between_last_3_to_12_months))
             # calc delayDays' avg
             delay_days_avg = 0 if delayed_dt_count == 0 else dt.total_delay_days // delayed_dt_count
@@ -300,8 +325,8 @@ class DataService:
         # load & calc undoneTrade
         udt: UndoneTrade = self.get_user_undone_trade(user_id)
         # calc all undoneTrades count
-        udt_count = get_zero_if_null(udt.undue_trades_count) + get_zero_if_null(
-            udt.past_due_trades_count) + get_zero_if_null(udt.arrear_trades_count)
+        udt_count = get_zero_if_none(udt.undue_trades_count) + get_zero_if_none(
+            udt.past_due_trades_count) + get_zero_if_none(udt.arrear_trades_count)
 
         # make & return VosouqStatusDTO
         return create_vosouq_status_dto(membership_duration[DAYS], membership_duration[MONTHS], dt_count,

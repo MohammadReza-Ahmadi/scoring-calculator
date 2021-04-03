@@ -5,7 +5,7 @@ from app.core.constants import rules_max_val, PARENT, HISTORIES, CODE, H5_RULES_
 from app.core.database import get_db
 from app.core.models.rules import Rule
 from app.core.services.data_service import DataService
-from app.core.services.util import create_new_rule, create_new_score_change_reason
+from app.core.services.util import create_new_rule, create_new_score_reason
 
 
 # noinspection DuplicatedCode
@@ -69,9 +69,9 @@ def import_rules_history_membership_days_counts_h5(ds: DataService):
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Histories(H) membership_days_counts_h5 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: H5_RULES_PROFILE_MEMBERSHIP_DAYS_COUNTS})
-    change_reason = create_new_score_change_reason(H5_RULES_PROFILE_MEMBERSHIP_DAYS_COUNTS, rule_codes, 'افزایش مدت عضویت فعال')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: H5_RULES_PROFILE_MEMBERSHIP_DAYS_COUNTS})
+    change_reason = create_new_score_reason(H5_RULES_PROFILE_MEMBERSHIP_DAYS_COUNTS, rule_codes, 'افزایش مدت عضویت فعال')
+    ds.insert_score_reason(change_reason)
     print('Histories(H) membership_days_counts_h5 change reasons are created.')
 
 
@@ -105,9 +105,9 @@ def import_rules_history_done_timely_trades_of_last_3_months_h6(ds: DataService)
     rule = create_new_rule(3, 'H6', 'H0605P40', 'کاربر در سه ماه گذشته بیش از 3 تعامل موفق با سایر کاربران داشته است', 4.44, 40, 4, 4)
     ds.insert_rule(rule)
     print('Histories(H) done_timely_trades_of_last_3_months_h6 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: H6_RULES_DONE_TIMELY_TRADES_OF_LAST_3_MONTHS})
-    change_reason = create_new_score_change_reason(H6_RULES_DONE_TIMELY_TRADES_OF_LAST_3_MONTHS, rule_codes, 'افزایش معاملات موفق در سه ماه گذشته', 'کاهش معاملات موفق در سه ماه گذشته')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: H6_RULES_DONE_TIMELY_TRADES_OF_LAST_3_MONTHS})
+    change_reason = create_new_score_reason(H6_RULES_DONE_TIMELY_TRADES_OF_LAST_3_MONTHS, rule_codes, 'افزایش معاملات موفق در سه ماه گذشته', 'کاهش معاملات موفق در سه ماه گذشته')
+    ds.insert_score_reason(change_reason)
     print('Histories(H) done_timely_trades_of_last_3_months_h6 change reasons are created.')
 
 
@@ -148,9 +148,9 @@ def import_rules_history_done_timely_trades_between_last_3_to_12_months_h7(ds: D
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Histories(H) done_timely_trades_between_last_3_to_12_months_h7 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: H7_RULES_DONE_TIMELY_TRADES_BETWEEN_LAST_3_TO_12_MONTHS})
-    change_reason = create_new_score_change_reason(H7_RULES_DONE_TIMELY_TRADES_BETWEEN_LAST_3_TO_12_MONTHS, rule_codes, 'افزایش معاملات موفق در یک سال گذشته', 'کاهش معاملات موفق در یک سال گذشته')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: H7_RULES_DONE_TIMELY_TRADES_BETWEEN_LAST_3_TO_12_MONTHS})
+    change_reason = create_new_score_reason(H7_RULES_DONE_TIMELY_TRADES_BETWEEN_LAST_3_TO_12_MONTHS, rule_codes, 'افزایش معاملات موفق در یک سال گذشته', 'کاهش معاملات موفق در یک سال گذشته')
+    ds.insert_score_reason(change_reason)
     print('Histories(H) done_timely_trades_between_last_3_to_12_months_h7 change reasons are created.')
 
 
@@ -190,9 +190,9 @@ def import_rules_history_recommended_to_others_counts_h8(ds: DataService):
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Histories(H) recommended_to_others_counts_h8 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: H8_RULES_PROFILE_RECOMMENDED_TO_OTHERS_COUNTS})
-    change_reason = create_new_score_change_reason(H8_RULES_PROFILE_RECOMMENDED_TO_OTHERS_COUNTS, rule_codes, 'افزایش پیشنهادات طرفین معاملات به سایرین جهت انجام معامله با شما', 'کاهش پیشنهادات طرفین معاملات به سایرین جهت انجام معامله با شما')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: H8_RULES_PROFILE_RECOMMENDED_TO_OTHERS_COUNTS})
+    change_reason = create_new_score_reason(H8_RULES_PROFILE_RECOMMENDED_TO_OTHERS_COUNTS, rule_codes, 'افزایش پیشنهادات طرفین معاملات به سایرین جهت انجام معامله با شما', 'کاهش پیشنهادات طرفین معاملات به سایرین جهت انجام معامله با شما')
+    ds.insert_score_reason(change_reason)
     print('Histories(H) recommended_to_others_counts_h8 change reasons are created.')
 
 
@@ -227,9 +227,9 @@ def import_rules_history_star_counts_avgs_h9(ds: DataService):
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Histories(H) star_counts_avgs_h9 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: H9_RULES_PROFILE_STAR_COUNTS_AVGS})
-    change_reason = create_new_score_change_reason(H9_RULES_PROFILE_STAR_COUNTS_AVGS, rule_codes, 'افزایش امتیاز رضایتمندی دریافت شده از طرفین معاملات', 'کاهش امتیاز رضایتمندی دریافت شده از طرفین معاملات')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: H9_RULES_PROFILE_STAR_COUNTS_AVGS})
+    change_reason = create_new_score_reason(H9_RULES_PROFILE_STAR_COUNTS_AVGS, rule_codes, 'افزایش امتیاز رضایتمندی دریافت شده از طرفین معاملات', 'کاهش امتیاز رضایتمندی دریافت شده از طرفین معاملات')
+    ds.insert_score_reason(change_reason)
     print('Histories(H) star_counts_avgs_h9 change reasons are created.')
 
 
@@ -263,9 +263,9 @@ def import_rules_history_undone_undue_trades_counts_h10(ds: DataService):
     rule = create_new_rule(3, 'H10', 'H1005P10', 'کاربر 4 تعامل سررسید نشده دارد', 1.11, 10, 4, 4)
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: H10_RULES_UNDONE_UNDUE_TRADES_COUNTS})
-    change_reason = create_new_score_change_reason(H10_RULES_UNDONE_UNDUE_TRADES_COUNTS, rule_codes, 'افزایش امکان سنجش رفتار اعتباری کاربر از طریق افزایش معاملات جاری', 'کاهش امکان سنجش رفتار اعتباری کاربر به دلیل کاهش معاملات جاری')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: H10_RULES_UNDONE_UNDUE_TRADES_COUNTS})
+    change_reason = create_new_score_reason(H10_RULES_UNDONE_UNDUE_TRADES_COUNTS, rule_codes, 'افزایش امکان سنجش رفتار اعتباری کاربر از طریق افزایش معاملات جاری', 'کاهش امکان سنجش رفتار اعتباری کاربر به دلیل کاهش معاملات جاری')
+    ds.insert_score_reason(change_reason)
     print('Histories(H) undone_undue_trades_counts_h10 part1 change reasons are created.')
 
     # NumNotDueDeal = 5	03	H1006P3	کاربر 5 تعامل سررسید نشده دارد
@@ -298,9 +298,9 @@ def import_rules_history_undone_undue_trades_counts_h10(ds: DataService):
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Histories(H) undone_undue_trades_counts_h10 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: H10_RULES_UNDONE_UNDUE_TRADES_COUNTS})
-    change_reason = create_new_score_change_reason(H10_RULES_UNDONE_UNDUE_TRADES_COUNTS, rule_codes, 'کاهش تعداد معاملات جاری', 'افزایش بیش از حد تعداد معاملات جاری')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: H10_RULES_UNDONE_UNDUE_TRADES_COUNTS})
+    change_reason = create_new_score_reason(H10_RULES_UNDONE_UNDUE_TRADES_COUNTS, rule_codes, 'کاهش تعداد معاملات جاری', 'افزایش بیش از حد تعداد معاملات جاری')
+    ds.insert_score_reason(change_reason)
     print('Histories(H) undone_undue_trades_counts_h10 part2 change reasons are created.')
 
 
@@ -319,9 +319,9 @@ def import_rules_history_loans_total_count_h11(ds: DataService):
     rule = create_new_rule(3, 'H11', 'H1102P20', 'کاربر ۱ تسهیلات در جریان دارد', 2.22, 20, 1, 1)
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: H11_RULES_LOAN_TOTAL_COUNTS})
-    change_reason = create_new_score_change_reason(H11_RULES_LOAN_TOTAL_COUNTS, rule_codes, 'افزایش امکان سنجش رفتار اعتباری کاربر از طریق اخذ تسهیلات بانکی', 'کاهش امکان سنجش رفتار اعتباری کاربر به دلیل اتمام تسهیلات بانکی')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: H11_RULES_LOAN_TOTAL_COUNTS})
+    change_reason = create_new_score_reason(H11_RULES_LOAN_TOTAL_COUNTS, rule_codes, 'افزایش امکان سنجش رفتار اعتباری کاربر از طریق اخذ تسهیلات بانکی', 'کاهش امکان سنجش رفتار اعتباری کاربر به دلیل اتمام تسهیلات بانکی')
+    ds.insert_score_reason(change_reason)
     print('Histories(H) loans_total_count_h11 part-1 change reasons are created.')
 
     # Loans = 2	10	H1103P10	کاربر ۲ تسهیلات در جریان دارد
@@ -349,9 +349,9 @@ def import_rules_history_loans_total_count_h11(ds: DataService):
     ds.insert_rule(rule)
     rule_codes.append(rule.code)
     print('Histories(H) loans_total_count_h11 rules are created.')
-    ds.delete_score_change_reasons({RULE_MASTER_CODE: H11_RULES_LOAN_TOTAL_COUNTS})
-    change_reason = create_new_score_change_reason(H11_RULES_LOAN_TOTAL_COUNTS, rule_codes, 'کاهش تعداد تسهیلات بانکی در جریان', 'افزایش تعداد تسهیلات بانکی در جریان')
-    ds.insert_score_change_reason(change_reason)
+    ds.delete_score_reasons({RULE_MASTER_CODE: H11_RULES_LOAN_TOTAL_COUNTS})
+    change_reason = create_new_score_reason(H11_RULES_LOAN_TOTAL_COUNTS, rule_codes, 'کاهش تعداد تسهیلات بانکی در جریان', 'افزایش تعداد تسهیلات بانکی در جریان')
+    ds.insert_score_reason(change_reason)
     print('Histories(H) loans_total_count_h11 part-2 change reasons are created.')
 
 

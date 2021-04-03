@@ -113,6 +113,10 @@ class RedisCachingRulesProfiles:
         scores = self.rds.zrangebyscore(SET_RULES_PROFILE_HAS_KYCS, int(has_kyc), rules_max_val)
         return get_score_from_dict(scores)
 
+    def get_code_of_rules_profile_has_kycs_i1(self, has_kyc):
+        scores = self.rds.zrangebyscore(SET_RULES_PROFILE_HAS_KYCS, int(has_kyc), rules_max_val)
+        return get_score_code_from_dict(scores)
+
     def get_score_of_rules_profile_address_verifications_i4(self, address_verification):
         scores = self.rds.zrangebyscore(SET_RULES_PROFILE_ADDRESS_VERIFICATIONS, int(address_verification), rules_max_val)
         return get_score_from_dict(scores)

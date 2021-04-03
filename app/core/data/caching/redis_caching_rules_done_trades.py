@@ -10,7 +10,7 @@ from app.core.constants import SET_RULES_DONE_ARREAR_TRADES_BETWEEN_LAST_3_TO_12
     H7_RULES_DONE_TIMELY_TRADES_BETWEEN_LAST_3_TO_12_MONTHS, T28_RULES_DONE_TRADES_AVERAGE_DELAY_DAYS, \
     V12_RULES_DONE_TRADES_AVERAGE_TOTAL_BALANCE_RATIOS, PARENT
 from app.core.services.data_service import DataService
-from app.core.services.util import get_score_from_dict, add_rule_to_dict
+from app.core.services.util import get_score_from_dict, add_rule_to_dict, get_score_code_from_dict
 
 
 # noinspection DuplicatedCode
@@ -134,30 +134,62 @@ class RedisCachingRulesDoneTrades:
         scores = self.rds.zrangebyscore(SET_RULES_DONE_ARREAR_TRADES_OF_LAST_3_MONTHS, trades_count, rules_max_val)
         return get_score_from_dict(scores)
 
+    def get_code_of_rules_done_arrear_trades_of_last_3_months_t24(self, trades_count):
+        scores = self.rds.zrangebyscore(SET_RULES_DONE_ARREAR_TRADES_OF_LAST_3_MONTHS, trades_count, rules_max_val)
+        return get_score_code_from_dict(scores)
+
     def get_score_of_rules_done_arrear_trades_between_last_3_to_12_months_t25(self, trades_count):
         scores = self.rds.zrangebyscore(SET_RULES_DONE_ARREAR_TRADES_BETWEEN_LAST_3_TO_12_MONTHS, trades_count, rules_max_val)
         return get_score_from_dict(scores)
+
+    def get_code_of_rules_done_arrear_trades_between_last_3_to_12_months_t25(self, trades_count):
+        scores = self.rds.zrangebyscore(SET_RULES_DONE_ARREAR_TRADES_BETWEEN_LAST_3_TO_12_MONTHS, trades_count, rules_max_val)
+        return get_score_code_from_dict(scores)
 
     def get_score_of_rules_done_past_due_trades_of_last_3_months_t22(self, trades_count):
         scores = self.rds.zrangebyscore(SET_RULES_DONE_PAST_DUE_TRADES_OF_LAST_3_MONTHS, trades_count, rules_max_val)
         return get_score_from_dict(scores)
 
+    def get_code_of_rules_done_past_due_trades_of_last_3_months_t22(self, trades_count):
+        scores = self.rds.zrangebyscore(SET_RULES_DONE_PAST_DUE_TRADES_OF_LAST_3_MONTHS, trades_count, rules_max_val)
+        return get_score_code_from_dict(scores)
+
     def get_score_of_rules_done_past_due_trades_between_last_3_to_12_months_t23(self, trades_count):
         scores = self.rds.zrangebyscore(SET_RULES_DONE_PAST_DUE_TRADES_BETWEEN_LAST_3_TO_12_MONTHS, trades_count, rules_max_val)
         return get_score_from_dict(scores)
+
+    def get_code_of_rules_done_past_due_trades_between_last_3_to_12_months_t23(self, trades_count):
+        scores = self.rds.zrangebyscore(SET_RULES_DONE_PAST_DUE_TRADES_BETWEEN_LAST_3_TO_12_MONTHS, trades_count, rules_max_val)
+        return get_score_code_from_dict(scores)
 
     def get_score_of_rules_done_timely_trades_of_last_3_months_h6(self, trades_count):
         scores = self.rds.zrangebyscore(SET_RULES_DONE_TIMELY_TRADES_OF_LAST_3_MONTHS, trades_count, rules_max_val)
         return get_score_from_dict(scores)
 
+    def get_code_of_rules_done_timely_trades_of_last_3_months_h6(self, trades_count):
+        scores = self.rds.zrangebyscore(SET_RULES_DONE_TIMELY_TRADES_OF_LAST_3_MONTHS, trades_count, rules_max_val)
+        return get_score_code_from_dict(scores)
+
     def get_score_of_rules_done_timely_trades_between_last_3_to_12_months_h7(self, trades_count):
         scores = self.rds.zrangebyscore(SET_RULES_DONE_TIMELY_TRADES_BETWEEN_LAST_3_TO_12_MONTHS, trades_count, rules_max_val)
         return get_score_from_dict(scores)
+
+    def get_code_of_rules_done_timely_trades_between_last_3_to_12_months_h7(self, trades_count):
+        scores = self.rds.zrangebyscore(SET_RULES_DONE_TIMELY_TRADES_BETWEEN_LAST_3_TO_12_MONTHS, trades_count, rules_max_val)
+        return get_score_code_from_dict(scores)
 
     def get_score_of_rules_done_trades_average_delay_days_t28(self, average_delay_days):
         scores = self.rds.zrangebyscore(SET_RULES_DONE_TRADES_AVERAGE_DELAY_DAYS, average_delay_days, rules_max_val)
         return get_score_from_dict(scores)
 
+    def get_code_of_rules_done_trades_average_delay_days_t28(self, average_delay_days):
+        scores = self.rds.zrangebyscore(SET_RULES_DONE_TRADES_AVERAGE_DELAY_DAYS, average_delay_days, rules_max_val)
+        return get_score_code_from_dict(scores)
+
     def get_score_of_rules_done_trades_average_total_balance_ratios_v12(self, average_total_balance_ratio):
         scores = self.rds.zrangebyscore(SET_RULES_DONE_TRADES_AVERAGE_TOTAL_BALANCE_RATIOS, average_total_balance_ratio, rules_max_val)
         return get_score_from_dict(scores)
+
+    def get_code_of_rules_done_trades_average_total_balance_ratios_v12(self, average_total_balance_ratio):
+        scores = self.rds.zrangebyscore(SET_RULES_DONE_TRADES_AVERAGE_TOTAL_BALANCE_RATIOS, average_total_balance_ratio, rules_max_val)
+        return get_score_code_from_dict(scores)
