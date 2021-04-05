@@ -33,7 +33,7 @@ from app.core.models.undone_trades import UndoneTrade
 from app.core.services.scores_distributions_pipeline_generator import generate_scores_distributions_pipeline
 from app.core.services.util import create_score_status_dto, create_vosouq_status_dto, calculate_dates_diff, \
     create_loan_status_dto, create_cheque_status_dto, \
-    get_zero_if_none, create_score_details_dto, get_second_item, create_score_changes_dto
+    get_zero_if_none, create_score_details_dto, get_second_item, create_score_changes_dto, is_not_none
 from app.core.settings import min_score, max_score, distribution_count
 
 
@@ -102,7 +102,8 @@ class DataService:
         self.db.profiles.insert_one(dict(p))
 
     def update_profile(self, p: Profile):
-        p.membership_date = datetime.combine(p.membership_date, datetime.min.time())
+        if is_not_none(p.membership_date):
+            p.membership_date = datetime.combine(p.membership_date, datetime.min.time())
         self.db.profiles.update_one(
             {USER_ID: p.user_id},
             {'$set': dict(p)},
@@ -172,6 +173,18 @@ class DataService:
     def insert_undone_trade(self, udt: UndoneTrade):
         self.db.undoneTrades.insert_one(dict(udt))
 
+    def update_undone_trade(self, udt: UndoneTrade):
+        self.db.undoneTrades.update_one(
+            {USER_ID: udt.user_id},
+            {'$set': dict(udt)},
+            upsert=False)
+
+    def insert_or_update_undone_trade(self, udt: UndoneTrade, update_flag: bool = False):
+        if update_flag:
+            self.update_undone_trade(udt)
+        else:
+            self.insert_undone_trade(udt)
+
     def delete_undone_trades(self, filter_dict: {}) -> None:
         self.db.undoneTrades.delete_many(filter_dict)
 
@@ -195,6 +208,18 @@ class DataService:
     def insert_loan(self, ln: Loan):
         self.db.loans.insert_one(dict(ln))
 
+    def update_loan(self, ln: Loan):
+        self.db.loans.update_one(
+            {USER_ID: ln.user_id},
+            {'$set': dict(ln)},
+            upsert=False)
+
+    def insert_or_update_loan(self, ln: Loan, update_flag: bool = False):
+        if update_flag:
+            self.update_loan(ln)
+        else:
+            self.insert_loan(ln)
+
     def delete_loans(self, filter_dict: {}) -> None:
         self.db.loans.delete_many(filter_dict)
 
@@ -217,6 +242,18 @@ class DataService:
     # CHEQUE SERVICES ................................................
     def insert_cheque(self, ch: Cheque):
         self.db.cheques.insert_one(dict(ch))
+
+    def update_cheque(self, ch: Cheque):
+        self.db.cheques.update_one(
+            {USER_ID: ch.user_id},
+            {'$set': dict(ch)},
+            upsert=False)
+
+    def insert_or_update_cheque(self, ch: Cheque, update_flag: bool = False):
+        if update_flag:
+            self.update_cheque(ch)
+        else:
+            self.insert_cheque(ch)
 
     def delete_cheques(self, filter_dict: {}) -> None:
         self.db.cheques.delete_many(filter_dict)

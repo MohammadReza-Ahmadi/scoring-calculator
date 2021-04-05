@@ -264,8 +264,24 @@ def get_not_none_value(obj, default_val):
     return obj if obj is not None else default_val
 
 
-def is_not_none(obj) -> bool:
-    return bool(obj)
+def is_none(val):
+    return not bool(val)
+
+
+def is_not_none(val):
+    return not is_none(val)
+
+
+def is_none_or_zero_int(val: int):
+    return not bool(val) or val == ZERO
+
+
+def is_none_or_zero_float(val: float):
+    return not bool(val) or val == ZERO
+
+
+def is_not_none(val) -> bool:
+    return bool(val)
 
 
 def get_zero_if_none(num):

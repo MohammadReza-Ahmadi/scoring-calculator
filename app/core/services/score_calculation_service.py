@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import datetime
 
 from numpy import long
 
@@ -6,7 +6,7 @@ from app.core.constants import SCORE_CODE_RULES_UNDONE_PAST_DUE_TRADES_TOTAL_BAL
     SCORE_CODE_RULES_UNDONE_ARREAR_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS, GENERAL_AVG_DEAL_AMOUNT, \
     GENERAL_AVG_DELAY_DAYS, \
     ALL_USERS_AVERAGE_UNFIXED_RETURNED_CHEQUES_AMOUNT, TIMELINESS_SCORE, IDENTITIES_SCORE, HISTORIES_SCORE, \
-    VOLUMES_SCORE, NORMALIZATION_MAX_SCORE, ONE_HUNDRED, ALL_USERS_AVERAGE_MONTHLY_INSTALLMENT_AMOUNT
+    VOLUMES_SCORE, NORMALIZATION_MAX_SCORE, ONE_HUNDRED, ALL_USERS_AVERAGE_MONTHLY_INSTALLMENT_AMOUNT, ZERO
 from app.core.data.caching.redis_caching import RedisCaching
 from app.core.data.caching.redis_caching_rules_cheques import RedisCachingRulesCheques
 from app.core.data.caching.redis_caching_rules_done_trades import RedisCachingRulesDoneTrades
@@ -21,9 +21,10 @@ from app.core.models.loans import Loan
 from app.core.models.profile import Profile
 from app.core.models.score_changes import ScoreChange
 from app.core.models.score_reasons import ScoreReason
+from app.core.models.scoring_enums import ProfileMilitaryServiceStatusEnum
 from app.core.models.undone_trades import UndoneTrade
 from app.core.services.data_service import DataService
-from app.core.services.util import get_zero_if_none, create_new_score_change
+from app.core.services.util import get_zero_if_none, create_new_score_change, is_none_or_zero_float, is_not_none
 
 
 # noinspection DuplicatedCode
@@ -91,7 +92,7 @@ class ScoreCalculationService:
 
         # CALC MEMBERSHIP_DAYS_COUNT'S SCORE
         # calculate membership days count
-        member_ship_days_count = (datetime.today().date() - p.membership_date).days
+        member_ship_days_count = (datetime.today().date() - p.membership_date).days if is_not_none(p.membership_date) else ZERO
         revised_rule_score = rds.get_score_of_rules_profile_membership_days_counts_h5(member_ship_days_count)
         # handle score change reason
         rule_code = rds.get_code_of_rules_profile_membership_days_counts_h5(member_ship_days_count)
@@ -105,9 +106,12 @@ class ScoreCalculationService:
         print('score= {}, profile:[membership_date-h5]= {}, profile_member_ship_days_count={}'.format(revised_rule_score, p.membership_date, member_ship_days_count))
 
         # CALC MILITARY_SERVICE_STATUS'S SCORE
-        revised_rule_score = rds.get_score_of_rules_profile_military_service_status_i2(p.military_service_status)
-        # handle score change reason
-        rule_code = rds.get_code_of_rules_profile_military_service_status_i2(p.military_service_status)
+        if p.military_service_status != ProfileMilitaryServiceStatusEnum.UNKNOWN:
+            revised_rule_score = rds.get_score_of_rules_profile_military_service_status_i2(p.military_service_status)
+            # handle score change reason
+            rule_code = rds.get_code_of_rules_profile_military_service_status_i2(p.military_service_status)
+        else:
+            revised_rule_score = 0
         revised_user_score = self.calculate_user_score_by_impressing_rule_score(p.score, recent_p.military_service_status_score, revised_rule_score)
         self.resolve_and_save_score_change(p.user_id, rule_code, recent_p.military_service_status_score, revised_rule_score, revised_user_score)
         # update score values in related entity
@@ -118,9 +122,9 @@ class ScoreCalculationService:
         print('score= {}, profile:[military_service_status-i2]= {}'.format(revised_rule_score, p.military_service_status))
 
         # CALC RECOMMENDED_TO_OTHERS' SCORE
-        revised_rule_score = rds.get_score_of_rules_profile_recommended_to_others_counts_h8(p.recommended_to_others_count)
+        revised_rule_score = rds.get_score_of_rules_profile_recommended_to_others_counts_h8(get_zero_if_none(p.recommended_to_others_count))
         # handle score change reason
-        rule_code = rds.get_code_of_rules_profile_recommended_to_others_counts_h8(p.recommended_to_others_count)
+        rule_code = rds.get_code_of_rules_profile_recommended_to_others_counts_h8(get_zero_if_none(p.recommended_to_others_count))
         revised_user_score = self.calculate_user_score_by_impressing_rule_score(p.score, recent_p.recommended_to_others_count_score, revised_rule_score)
         self.resolve_and_save_score_change(p.user_id, rule_code, recent_p.recommended_to_others_count_score, revised_rule_score, revised_user_score)
         # update score values in related entity
@@ -128,7 +132,7 @@ class ScoreCalculationService:
         p.histories_score += revised_rule_score
         profile_score += revised_rule_score
         p.score += revised_rule_score
-        print('score= {}, profile:[recommended_to_others_count-h8]= {}'.format(revised_rule_score, p.recommended_to_others_count))
+        print('score= {}, profile:[recommended_to_others_count-h8]= {}'.format(revised_rule_score, get_zero_if_none(p.recommended_to_others_count)))
 
         # CALC SIM_CARD_OWNERSHIP'S SCORE
         revised_rule_score = rds.get_score_of_rules_profile_sim_card_ownerships_i3(p.sim_card_ownership)
@@ -144,9 +148,9 @@ class ScoreCalculationService:
         print('score= {}, profile:[sim_card_ownership-i3]= {}'.format(revised_rule_score, p.sim_card_ownership))
 
         # CALC STAR_COUNT'S SCORE
-        revised_rule_score = rds.get_score_of_rules_profile_star_counts_avgs_h9(p.star_count_average)
+        revised_rule_score = rds.get_score_of_rules_profile_star_counts_avgs_h9(get_zero_if_none(p.star_count_average))
         # handle score change reason
-        rule_code = rds.get_code_of_rules_profile_star_counts_avgs_h9(p.star_count_average)
+        rule_code = rds.get_code_of_rules_profile_star_counts_avgs_h9(get_zero_if_none(p.star_count_average))
         revised_user_score = self.calculate_user_score_by_impressing_rule_score(p.score, recent_p.star_count_average_score, revised_rule_score)
         self.resolve_and_save_score_change(p.user_id, rule_code, recent_p.star_count_average_score, revised_rule_score, revised_user_score)
         # update score values in related entity
@@ -157,17 +161,21 @@ class ScoreCalculationService:
         print('score= {}, profile:[star_count_average-h9]= {}'.format(revised_rule_score, p.star_count_average))
 
         print('............. profile score = {} ................'.format(profile_score))
-        print('... IDENTITIES_SCORE= {} , HISTORIES_SCORE= {}, VOLUMES_SCORE= {}, TIMELINESS_SCORE= {} \n'.format(p.identities_score, p.histories_score, p.volumes_score, p.timeliness_score))
+        self.print_score(p)
         return profile_score
+
+    # noinspection PyMethodMayBeStatic
+    def print_score(self, p):
+        print('... SCORE={} [IDENTITIES_SCORE= {} , HISTORIES_SCORE= {}, VOLUMES_SCORE= {}, TIMELINESS_SCORE= {}] \n'.format(p.score, p.identities_score, p.histories_score, p.volumes_score, p.timeliness_score))
 
     def calculate_user_done_trades_score(self, p: Profile = None, reset_cache=False, recent_dt: DoneTrade = None, revised_dt: DoneTrade = None):
         self.validate_profile(p)
         rds: RedisCachingRulesDoneTrades = self.rds.get_redis_caching_rules_done_trades_service(reset_cache)
         done_trades_score = 0
 
-        revised_rule_score = rds.get_score_of_rules_done_timely_trades_of_last_3_months_h6(revised_dt.timely_trades_count_of_last_3_months)
+        revised_rule_score = rds.get_score_of_rules_done_timely_trades_of_last_3_months_h6(get_zero_if_none(revised_dt.timely_trades_count_of_last_3_months))
         # handle score change reason
-        rule_code = rds.get_code_of_rules_done_timely_trades_of_last_3_months_h6(p.address_verification)
+        rule_code = rds.get_code_of_rules_done_timely_trades_of_last_3_months_h6(get_zero_if_none(revised_dt.timely_trades_count_of_last_3_months))
         revised_user_score = self.calculate_user_score_by_impressing_rule_score(p.score, recent_dt.timely_trades_count_of_last_3_months_score, revised_rule_score)
         self.resolve_and_save_score_change(p.user_id, rule_code, recent_dt.timely_trades_count_of_last_3_months_score, revised_rule_score, revised_user_score)
         # update score values in related entity
@@ -178,9 +186,9 @@ class ScoreCalculationService:
         p.score += revised_rule_score
         print('score= {}, doneTrades:[timely_trades_count_of_last_3_months_h6]= {}'.format(revised_rule_score, revised_dt.timely_trades_count_of_last_3_months))
 
-        revised_rule_score = rds.get_score_of_rules_done_timely_trades_between_last_3_to_12_months_h7(revised_dt.timely_trades_count_between_last_3_to_12_months)
+        revised_rule_score = rds.get_score_of_rules_done_timely_trades_between_last_3_to_12_months_h7(get_zero_if_none(revised_dt.timely_trades_count_between_last_3_to_12_months))
         # handle score change reason
-        rule_code = rds.get_code_of_rules_done_timely_trades_between_last_3_to_12_months_h7(revised_dt.timely_trades_count_between_last_3_to_12_months)
+        rule_code = rds.get_code_of_rules_done_timely_trades_between_last_3_to_12_months_h7(get_zero_if_none(revised_dt.timely_trades_count_between_last_3_to_12_months))
         revised_user_score = self.calculate_user_score_by_impressing_rule_score(p.score, recent_dt.timely_trades_count_between_last_3_to_12_months_score, revised_rule_score)
         self.resolve_and_save_score_change(p.user_id, rule_code, recent_dt.timely_trades_count_between_last_3_to_12_months_score, revised_rule_score, revised_user_score)
         # update score values in related entity
@@ -191,9 +199,9 @@ class ScoreCalculationService:
         p.score += revised_rule_score
         print('score= {}, doneTrades:[timely_trades_count_between_last_3_to_12_months-h7]= {}'.format(revised_rule_score, revised_dt.timely_trades_count_between_last_3_to_12_months))
 
-        revised_rule_score = rds.get_score_of_rules_done_past_due_trades_of_last_3_months_t22(revised_dt.past_due_trades_count_of_last_3_months)
+        revised_rule_score = rds.get_score_of_rules_done_past_due_trades_of_last_3_months_t22(get_zero_if_none(revised_dt.past_due_trades_count_of_last_3_months))
         # handle score change reason
-        rule_code = rds.get_code_of_rules_done_past_due_trades_of_last_3_months_t22(revised_dt.past_due_trades_count_of_last_3_months)
+        rule_code = rds.get_code_of_rules_done_past_due_trades_of_last_3_months_t22(get_zero_if_none(revised_dt.past_due_trades_count_of_last_3_months))
         revised_user_score = self.calculate_user_score_by_impressing_rule_score(p.score, recent_dt.past_due_trades_count_of_last_3_months_score, revised_rule_score)
         self.resolve_and_save_score_change(p.user_id, rule_code, recent_dt.past_due_trades_count_of_last_3_months_score, revised_rule_score, revised_user_score)
         # update score values in related entity
@@ -204,9 +212,9 @@ class ScoreCalculationService:
         p.score += revised_rule_score
         print('score= {}, doneTrades:[past_due_trades_count_of_last_3_months-t22]= {}'.format(revised_rule_score, revised_dt.past_due_trades_count_of_last_3_months))
 
-        revised_rule_score = rds.get_score_of_rules_done_past_due_trades_between_last_3_to_12_months_t23(revised_dt.past_due_trades_count_between_last_3_to_12_months)
+        revised_rule_score = rds.get_score_of_rules_done_past_due_trades_between_last_3_to_12_months_t23(get_zero_if_none(revised_dt.past_due_trades_count_between_last_3_to_12_months))
         # handle score change reason
-        rule_code = rds.get_code_of_rules_done_past_due_trades_between_last_3_to_12_months_t23(revised_dt.past_due_trades_count_between_last_3_to_12_months)
+        rule_code = rds.get_code_of_rules_done_past_due_trades_between_last_3_to_12_months_t23(get_zero_if_none(revised_dt.past_due_trades_count_between_last_3_to_12_months))
         revised_user_score = self.calculate_user_score_by_impressing_rule_score(p.score, recent_dt.past_due_trades_count_between_last_3_to_12_months_score, revised_rule_score)
         self.resolve_and_save_score_change(p.user_id, rule_code, recent_dt.past_due_trades_count_between_last_3_to_12_months_score, revised_rule_score, revised_user_score)
         # update score values in related entity
@@ -217,9 +225,9 @@ class ScoreCalculationService:
         p.score += revised_rule_score
         print('score= {}, doneTrades:[past_due_trades_count_between_last_3_to_12_months-t23]= {}'.format(revised_rule_score, revised_dt.past_due_trades_count_between_last_3_to_12_months))
 
-        revised_rule_score = rds.get_score_of_rules_done_arrear_trades_of_last_3_months_t24(revised_dt.arrear_trades_count_of_last_3_months)
+        revised_rule_score = rds.get_score_of_rules_done_arrear_trades_of_last_3_months_t24(get_zero_if_none(revised_dt.arrear_trades_count_of_last_3_months))
         # handle score change reason
-        rule_code = rds.get_code_of_rules_done_arrear_trades_of_last_3_months_t24(revised_dt.arrear_trades_count_of_last_3_months)
+        rule_code = rds.get_code_of_rules_done_arrear_trades_of_last_3_months_t24(get_zero_if_none(revised_dt.arrear_trades_count_of_last_3_months))
         revised_user_score = self.calculate_user_score_by_impressing_rule_score(p.score, recent_dt.arrear_trades_count_of_last_3_months_score, revised_rule_score)
         self.resolve_and_save_score_change(p.user_id, rule_code, recent_dt.arrear_trades_count_of_last_3_months_score, revised_rule_score, revised_user_score)
         # update score values in related entity
@@ -230,9 +238,9 @@ class ScoreCalculationService:
         p.score += revised_rule_score
         print('score= {}, doneTrades:[arrear_trades_count_of_last_3_months-t24]= {}'.format(revised_rule_score, revised_dt.arrear_trades_count_of_last_3_months))
 
-        revised_rule_score = rds.get_score_of_rules_done_arrear_trades_between_last_3_to_12_months_t25(revised_dt.arrear_trades_count_between_last_3_to_12_months)
+        revised_rule_score = rds.get_score_of_rules_done_arrear_trades_between_last_3_to_12_months_t25(get_zero_if_none(revised_dt.arrear_trades_count_between_last_3_to_12_months))
         # handle score change reason
-        rule_code = rds.get_code_of_rules_done_arrear_trades_between_last_3_to_12_months_t25(revised_dt.arrear_trades_count_between_last_3_to_12_months)
+        rule_code = rds.get_code_of_rules_done_arrear_trades_between_last_3_to_12_months_t25(get_zero_if_none(revised_dt.arrear_trades_count_between_last_3_to_12_months))
         revised_user_score = self.calculate_user_score_by_impressing_rule_score(p.score, recent_dt.arrear_trades_count_between_last_3_to_12_months_score, revised_rule_score)
         self.resolve_and_save_score_change(p.user_id, rule_code, recent_dt.arrear_trades_count_between_last_3_to_12_months_score, revised_rule_score, revised_user_score)
         # update score values in related entity
@@ -245,7 +253,7 @@ class ScoreCalculationService:
 
         # calculate average of total balance
         # todo: should calculate all users' trades total balance
-        avg_total_balance_ratio = 0 if GENERAL_AVG_DEAL_AMOUNT == 0 else revised_dt.trades_total_balance / GENERAL_AVG_DEAL_AMOUNT
+        avg_total_balance_ratio = 0 if is_none_or_zero_float(revised_dt.trades_total_balance) or GENERAL_AVG_DEAL_AMOUNT == 0 else revised_dt.trades_total_balance / GENERAL_AVG_DEAL_AMOUNT
         avg_total_balance_ratio = float(avg_total_balance_ratio)
         revised_rule_score = rds.get_score_of_rules_done_trades_average_total_balance_ratios_v12(avg_total_balance_ratio)
         # handle score change reason
@@ -263,7 +271,7 @@ class ScoreCalculationService:
         # calculate average of all users delay days
         # todo: should calculate all users' average of done trades delay days (general_avg_delay_days)
         # general_avg_delay_days = 0
-        avg_delay_days = 0 if GENERAL_AVG_DELAY_DAYS == 0 else int(revised_dt.total_delay_days) / GENERAL_AVG_DELAY_DAYS
+        avg_delay_days = 0 if GENERAL_AVG_DELAY_DAYS == 0 else int(get_zero_if_none(revised_dt.total_delay_days)) / GENERAL_AVG_DELAY_DAYS
         revised_rule_score = rds.get_score_of_rules_done_trades_average_delay_days_t28(avg_delay_days)
         # handle score change reason
         rule_code = rds.get_code_of_rules_done_trades_average_delay_days_t28(avg_delay_days)
@@ -278,7 +286,7 @@ class ScoreCalculationService:
         print('score= {}, doneTrades:[avg_delay_days-t28]= {}'.format(revised_rule_score, revised_dt.total_delay_days))
 
         print('............. doneTrades score = {} ................'.format(done_trades_score))
-        print('... IDENTITIES_SCORE= {} , HISTORIES_SCORE= {}, VOLUMES_SCORE= {}, TIMELINESS_SCORE= {} \n'.format(p.identities_score, p.histories_score, p.volumes_score, p.timeliness_score))
+        self.print_score(p)
         return done_trades_score
 
     def calculate_user_undone_trades_score(self, p: Profile = None, reset_cache=False, recent_udt: UndoneTrade = None, revised_udt: UndoneTrade = None, dt: DoneTrade = None):
@@ -286,9 +294,9 @@ class ScoreCalculationService:
         rds: RedisCachingRulesUndoneTrades = self.rds.get_redis_caching_rules_undone_trades_service(reset_cache)
         undone_trades_score = 0
 
-        revised_rule_score = rds.get_score_of_rules_undone_undue_trades_counts_h10(revised_udt.undue_trades_count)
+        revised_rule_score = rds.get_score_of_rules_undone_undue_trades_counts_h10(get_zero_if_none(revised_udt.undue_trades_count))
         # handle score change reason
-        rule_code = rds.get_code_of_rules_undone_undue_trades_counts_h10(revised_udt.undue_trades_count)
+        rule_code = rds.get_code_of_rules_undone_undue_trades_counts_h10(get_zero_if_none(revised_udt.undue_trades_count))
         revised_user_score = self.calculate_user_score_by_impressing_rule_score(p.score, recent_udt.undue_trades_count_score, revised_rule_score)
         self.resolve_and_save_score_change(p.user_id, rule_code, recent_udt.undue_trades_count_score, revised_rule_score, revised_user_score)
         # update score values in related entity
@@ -299,7 +307,7 @@ class ScoreCalculationService:
         p.score += revised_rule_score
         print('score= {}, undoneTrades:[undue_trades_count-h10]= {}'.format(revised_rule_score, revised_udt.undue_trades_count))
 
-        undue_total_balance_ratio = float(revised_udt.undue_trades_total_balance_of_last_year / dt.trades_total_balance)
+        undue_total_balance_ratio = float(get_zero_if_none(revised_udt.undue_trades_total_balance_of_last_year) / dt.trades_total_balance) if is_not_none(dt.trades_total_balance) else ZERO
         revised_rule_score = rds.get_score_of_rules_undone_undue_trades_total_balance_of_last_year_ratios_v15(undue_total_balance_ratio)
         # handle score change reason
         rule_code = rds.get_code_of_rules_undone_undue_trades_total_balance_of_last_year_ratios_v15(undue_total_balance_ratio)
@@ -313,9 +321,9 @@ class ScoreCalculationService:
         p.score += revised_rule_score
         print('score= {}, undoneTrades:[undue_total_balance_ratio-v15]= {}'.format(revised_rule_score, undue_total_balance_ratio))
 
-        revised_rule_score = rds.get_score_of_rules_undone_past_due_trades_counts_t26(revised_udt.past_due_trades_count)
+        revised_rule_score = rds.get_score_of_rules_undone_past_due_trades_counts_t26(get_zero_if_none(revised_udt.past_due_trades_count))
         # handle score change reason
-        rule_code = rds.get_code_of_rules_undone_past_due_trades_counts_t26(revised_udt.past_due_trades_count)
+        rule_code = rds.get_code_of_rules_undone_past_due_trades_counts_t26(get_zero_if_none(revised_udt.past_due_trades_count))
         revised_user_score = self.calculate_user_score_by_impressing_rule_score(p.score, recent_udt.past_due_trades_count_score, revised_rule_score)
         self.resolve_and_save_score_change(p.user_id, rule_code, recent_udt.past_due_trades_count_score, revised_rule_score, revised_user_score)
         # update score values in related entity
@@ -326,9 +334,12 @@ class ScoreCalculationService:
         p.score += revised_rule_score
         print('score= {}, undoneTrades:[past_due_trades_count-t26]= {}'.format(revised_rule_score, revised_udt.past_due_trades_count))
 
-        timely_done_trades_of_last_year = (dt.timely_trades_count_of_last_3_months + dt.timely_trades_count_between_last_3_to_12_months)
+        timely_done_trades_of_last_year = (get_zero_if_none(dt.timely_trades_count_of_last_3_months) + get_zero_if_none(dt.timely_trades_count_between_last_3_to_12_months))
         # calculate past_due_total_balance_ratio
-        past_due_total_balance_ratio = float(revised_udt.past_due_trades_total_balance_of_last_year / dt.trades_total_balance)
+        if is_none_or_zero_float(revised_udt.past_due_trades_total_balance_of_last_year) or is_none_or_zero_float(dt.trades_total_balance):
+            past_due_total_balance_ratio = 0
+        else:
+            past_due_total_balance_ratio = float(revised_udt.past_due_trades_total_balance_of_last_year / dt.trades_total_balance)
         revised_rule_score = rds.get_score_of_rules_undone_past_due_trades_total_balance_of_last_year_ratios_v13(past_due_total_balance_ratio)
         rule_code = rds.get_code_of_rules_undone_past_due_trades_total_balance_of_last_year_ratios_v13(past_due_total_balance_ratio)
         if timely_done_trades_of_last_year == 1 and rule_code == SCORE_CODE_RULES_UNDONE_PAST_DUE_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS:
@@ -344,7 +355,7 @@ class ScoreCalculationService:
         p.score += revised_rule_score
         print('score= {}, undoneTrades:[past_due_total_balance_ratio-v13]= {}'.format(revised_rule_score, past_due_total_balance_ratio))
 
-        revised_rule_score = rds.get_score_of_rules_undone_arrear_trades_counts_t27(revised_udt.arrear_trades_count)
+        revised_rule_score = rds.get_score_of_rules_undone_arrear_trades_counts_t27(get_zero_if_none(revised_udt.arrear_trades_count))
         # handle score change reason
         revised_user_score = self.calculate_user_score_by_impressing_rule_score(p.score, recent_udt.arrear_trades_count_score, revised_rule_score)
         self.resolve_and_save_score_change(p.user_id, rule_code, recent_udt.arrear_trades_count_score, revised_rule_score, revised_user_score)
@@ -357,7 +368,7 @@ class ScoreCalculationService:
         print('score= {}, undoneTrades:[arrear_trades_count-t27]= {}'.format(revised_rule_score, revised_udt.arrear_trades_count))
 
         # calculate arrear_total_balance_ratio
-        arrear_total_balance_ratio = float(revised_udt.arrear_trades_total_balance_of_last_year / dt.trades_total_balance)
+        arrear_total_balance_ratio = ZERO if is_none_or_zero_float(dt.trades_total_balance) else float(get_zero_if_none(revised_udt.arrear_trades_total_balance_of_last_year) / dt.trades_total_balance)
         revised_rule_score = rds.get_score_of_rules_undone_arrear_trades_total_balance_of_last_year_ratios_v14(arrear_total_balance_ratio)
         rule_code = rds.get_code_of_rules_undone_arrear_trades_total_balance_of_last_year_ratios_v14(arrear_total_balance_ratio)
         if timely_done_trades_of_last_year == 1 and rule_code == SCORE_CODE_RULES_UNDONE_ARREAR_TRADES_TOTAL_BALANCE_OF_LAST_YEAR_RATIOS:
@@ -374,7 +385,7 @@ class ScoreCalculationService:
         print('score= {}, undoneTrades:[arrear_total_balance_ratio-v14]= {}'.format(revised_rule_score, arrear_total_balance_ratio))
 
         print('............. undoneTrades_score = {} ................'.format(undone_trades_score))
-        print('... IDENTITIES_SCORE= {} , HISTORIES_SCORE= {}, VOLUMES_SCORE= {}, TIMELINESS_SCORE= {} \n'.format(p.identities_score, p.histories_score, p.volumes_score, p.timeliness_score))
+        self.print_score(p)
         return undone_trades_score
 
     def calculate_user_loans_score(self, p: Profile = None, reset_cache=False, recent_ln: Loan = None, revised_ln: Loan = None):
@@ -382,9 +393,9 @@ class ScoreCalculationService:
         rds: RedisCachingRulesLoans = self.rds.get_redis_caching_rules_loans_service(reset_cache)
         loans_score = 0
 
-        revised_rule_score = rds.get_score_of_rules_loans_total_counts_h11(revised_ln.loans_total_count)
+        revised_rule_score = rds.get_score_of_rules_loans_total_counts_h11(get_zero_if_none(revised_ln.loans_total_count))
         # handle score change reason
-        rule_code = rds.get_code_of_rules_loans_total_counts_h11(revised_ln.loans_total_count)
+        rule_code = rds.get_code_of_rules_loans_total_counts_h11(get_zero_if_none(revised_ln.loans_total_count))
         revised_user_score = self.calculate_user_score_by_impressing_rule_score(p.score, recent_ln.loans_total_count_score, revised_rule_score)
         self.resolve_and_save_score_change(p.user_id, rule_code, recent_ln.loans_total_count_score, revised_rule_score, revised_user_score)
         # update score values in related entity
@@ -396,7 +407,7 @@ class ScoreCalculationService:
         print('score= {}, loans:[loans_total_count-h11]= {}'.format(revised_rule_score, revised_ln.loans_total_count))
 
         # should be calculate avg_of_all_users_monthly_installment_total_balance
-        installments_total_balance_ratio = 0 if ALL_USERS_AVERAGE_MONTHLY_INSTALLMENT_AMOUNT == 0 else float(revised_ln.monthly_installments_total_balance / ALL_USERS_AVERAGE_MONTHLY_INSTALLMENT_AMOUNT)
+        installments_total_balance_ratio = 0 if ALL_USERS_AVERAGE_MONTHLY_INSTALLMENT_AMOUNT == 0 else float(get_zero_if_none(revised_ln.monthly_installments_total_balance) / ALL_USERS_AVERAGE_MONTHLY_INSTALLMENT_AMOUNT)
         revised_rule_score = rds.get_score_of_rules_loan_monthly_installments_total_balance_ratios_v16(installments_total_balance_ratio)
         # handle score change reason
         rule_code = rds.get_code_of_rules_loan_monthly_installments_total_balance_ratios_v16(installments_total_balance_ratio)
@@ -411,7 +422,7 @@ class ScoreCalculationService:
         print('score= {}, loans:[installments_total_balance_ratio-v16]= {}'.format(revised_rule_score, installments_total_balance_ratio))
 
         # should be calculate user_total_loans_balance
-        overdue_total_balance_ratio = 0 if revised_ln.loans_total_balance == 0 else float(revised_ln.overdue_loans_total_balance / revised_ln.loans_total_balance)
+        overdue_total_balance_ratio = ZERO if revised_ln.loans_total_balance == 0 else float(get_zero_if_none(revised_ln.overdue_loans_total_balance) / revised_ln.loans_total_balance)
         revised_rule_score = rds.get_score_of_rules_overdue_loans_total_balance_ratios_v18(overdue_total_balance_ratio)
         # handle score change reason
         rule_code = rds.get_code_of_rules_overdue_loans_total_balance_ratios_v18(overdue_total_balance_ratio)
@@ -425,9 +436,9 @@ class ScoreCalculationService:
         p.score += revised_rule_score
         print('score= {}, loans:[overdue_total_balance_ratio-v18]= {}'.format(revised_rule_score, overdue_total_balance_ratio))
 
-        revised_rule_score = rds.get_score_of_rules_past_due_loans_total_counts_t33(revised_ln.past_due_loans_total_count)
+        revised_rule_score = rds.get_score_of_rules_past_due_loans_total_counts_t33(get_zero_if_none(revised_ln.past_due_loans_total_count))
         # handle score change reason
-        rule_code = rds.get_code_of_rules_past_due_loans_total_counts_t33(revised_ln.past_due_loans_total_count)
+        rule_code = rds.get_code_of_rules_past_due_loans_total_counts_t33(get_zero_if_none(revised_ln.past_due_loans_total_count))
         revised_user_score = self.calculate_user_score_by_impressing_rule_score(p.score, recent_ln.past_due_loans_total_count_score, revised_rule_score)
         self.resolve_and_save_score_change(p.user_id, rule_code, recent_ln.past_due_loans_total_count_score, revised_rule_score, revised_user_score)
         # update score values in related entity
@@ -439,7 +450,7 @@ class ScoreCalculationService:
         print('score= {}, loans:[past_due_loans_total_count-t33]= {}'.format(revised_rule_score, revised_ln.past_due_loans_total_count))
 
         # should be calculate user_total_loans_balance
-        past_due_total_balance_ratio = 0 if revised_ln.loans_total_balance == 0 else float(revised_ln.past_due_loans_total_balance / revised_ln.loans_total_balance)
+        past_due_total_balance_ratio = 0 if revised_ln.loans_total_balance == 0 else float(get_zero_if_none(revised_ln.past_due_loans_total_balance) / revised_ln.loans_total_balance)
         revised_rule_score = rds.get_score_of_rules_past_due_loans_total_balance_ratios_v19(past_due_total_balance_ratio)
         # handle score change reason
         rule_code = rds.get_code_of_rules_past_due_loans_total_balance_ratios_v19(past_due_total_balance_ratio)
@@ -453,9 +464,9 @@ class ScoreCalculationService:
         p.score += revised_rule_score
         print('score= {}, loans:[past_due_total_balance_ratio-v19]= {}'.format(revised_rule_score, past_due_total_balance_ratio))
 
-        revised_rule_score = rds.get_score_of_rules_arrear_loans_total_counts_t34(revised_ln.arrear_loans_total_count)
+        revised_rule_score = rds.get_score_of_rules_arrear_loans_total_counts_t34(get_zero_if_none(revised_ln.arrear_loans_total_count))
         # handle score change reason
-        rule_code = rds.get_code_of_rules_arrear_loans_total_counts_t34(revised_ln.arrear_loans_total_count)
+        rule_code = rds.get_code_of_rules_arrear_loans_total_counts_t34(get_zero_if_none(revised_ln.arrear_loans_total_count))
         revised_user_score = self.calculate_user_score_by_impressing_rule_score(p.score, recent_ln.arrear_loans_total_count_score, revised_rule_score)
         self.resolve_and_save_score_change(p.user_id, rule_code, recent_ln.arrear_loans_total_count_score, revised_rule_score, revised_user_score)
         # update score values in related entity
@@ -467,7 +478,7 @@ class ScoreCalculationService:
         print('score= {}, loans:[arrear_loans_total_count-t34]= {}'.format(revised_rule_score, revised_ln.arrear_loans_total_count))
 
         # should be calculate user_total_loans_balance
-        arrear_total_balance_ratio = 0 if revised_ln.loans_total_balance == 0 else float(revised_ln.arrear_loans_total_balance / revised_ln.loans_total_balance)
+        arrear_total_balance_ratio = 0 if revised_ln.loans_total_balance == 0 else float(get_zero_if_none(revised_ln.arrear_loans_total_balance) / revised_ln.loans_total_balance)
         revised_rule_score = rds.get_score_of_rules_arrear_loans_total_balance_ratios_v20(arrear_total_balance_ratio)
         # handle score change reason
         rule_code = rds.get_code_of_rules_arrear_loans_total_balance_ratios_v20(arrear_total_balance_ratio)
@@ -481,9 +492,9 @@ class ScoreCalculationService:
         p.score += revised_rule_score
         print('score= {}, loans:[arrear_total_balance_ratio-v20]= {}'.format(revised_rule_score, arrear_total_balance_ratio))
 
-        revised_rule_score = rds.get_score_of_rules_suspicious_loans_total_counts_t35(revised_ln.suspicious_loans_total_count)
+        revised_rule_score = rds.get_score_of_rules_suspicious_loans_total_counts_t35(get_zero_if_none(revised_ln.suspicious_loans_total_count))
         # handle score change reason
-        rule_code = rds.get_code_of_rules_suspicious_loans_total_counts_t35(revised_ln.suspicious_loans_total_count)
+        rule_code = rds.get_code_of_rules_suspicious_loans_total_counts_t35(get_zero_if_none(revised_ln.suspicious_loans_total_count))
         revised_user_score = self.calculate_user_score_by_impressing_rule_score(p.score, recent_ln.suspicious_loans_total_count_score, revised_rule_score)
         self.resolve_and_save_score_change(p.user_id, rule_code, recent_ln.suspicious_loans_total_count_score, revised_rule_score, revised_user_score)
         # update score values in related entity
@@ -495,7 +506,10 @@ class ScoreCalculationService:
         print('score= {}, loans:[suspicious_loans_total_count-t35]= {}'.format(revised_rule_score, revised_ln.suspicious_loans_total_count))
 
         # should be calculate user_total_loans_balance
-        suspicious_total_balance_ratio = 0 if revised_ln.loans_total_balance == 0 else float(revised_ln.suspicious_loans_total_balance / revised_ln.loans_total_balance)
+        if is_none_or_zero_float(revised_ln.suspicious_loans_total_balance) | is_none_or_zero_float(revised_ln.loans_total_balance):
+            suspicious_total_balance_ratio = 0
+        else:
+            suspicious_total_balance_ratio = float(revised_ln.suspicious_loans_total_balance / revised_ln.loans_total_balance)
         revised_rule_score = rds.get_score_of_rules_suspicious_loans_total_balance_ratios_v21(suspicious_total_balance_ratio)
         # handle score change reason
         rule_code = rds.get_code_of_rules_suspicious_loans_total_balance_ratios_v21(suspicious_total_balance_ratio)
@@ -510,7 +524,7 @@ class ScoreCalculationService:
         print('score= {}, loans:[suspicious_total_balance_ratio-v21]= {}'.format(revised_rule_score, suspicious_total_balance_ratio))
 
         print('............. loans_score = {} ................'.format(loans_score))
-        print('... IDENTITIES_SCORE= {} , HISTORIES_SCORE= {}, VOLUMES_SCORE= {}, TIMELINESS_SCORE= {} \n'.format(p.identities_score, p.histories_score, p.volumes_score, p.timeliness_score))
+        self.print_score(p)
         return loans_score
 
     def calculate_user_cheques_score(self, p: Profile = None, reset_cache=False, recent_ch: Cheque = None, revised_ch: Cheque = None):
@@ -518,9 +532,9 @@ class ScoreCalculationService:
         rds: RedisCachingRulesCheques = self.rds.get_redis_caching_rules_cheques_service(reset_cache)
         cheques_score = 0
 
-        revised_rule_score = rds.get_score_of_rules_unfixed_returned_cheques_count_between_last_3_to_12_months_t30(revised_ch.unfixed_returned_cheques_count_between_last_3_to_12_months)
+        revised_rule_score = rds.get_score_of_rules_unfixed_returned_cheques_count_between_last_3_to_12_months_t30(get_zero_if_none(revised_ch.unfixed_returned_cheques_count_between_last_3_to_12_months))
         # handle score change reason
-        rule_code = rds.get_code_of_rules_unfixed_returned_cheques_count_between_last_3_to_12_months_t30(revised_ch.unfixed_returned_cheques_count_between_last_3_to_12_months)
+        rule_code = rds.get_code_of_rules_unfixed_returned_cheques_count_between_last_3_to_12_months_t30(get_zero_if_none(revised_ch.unfixed_returned_cheques_count_between_last_3_to_12_months))
         revised_user_score = self.calculate_user_score_by_impressing_rule_score(p.score, recent_ch.unfixed_returned_cheques_count_between_last_3_to_12_months_score, revised_rule_score)
         self.resolve_and_save_score_change(p.user_id, rule_code, recent_ch.unfixed_returned_cheques_count_between_last_3_to_12_months_score, revised_rule_score, revised_user_score)
         # update score values in related entity
@@ -531,9 +545,9 @@ class ScoreCalculationService:
         p.score += revised_rule_score
         print('score= {}, cheques:[unfixed_returned_cheques_count_between_last_3_to_12_months-t30]= {}'.format(revised_rule_score, revised_ch.unfixed_returned_cheques_count_between_last_3_to_12_months))
 
-        revised_rule_score = rds.get_score_of_rules_unfixed_returned_cheques_count_of_last_3_months_t29(revised_ch.unfixed_returned_cheques_count_of_last_3_months)
+        revised_rule_score = rds.get_score_of_rules_unfixed_returned_cheques_count_of_last_3_months_t29(get_zero_if_none(revised_ch.unfixed_returned_cheques_count_of_last_3_months))
         # handle score change reason
-        rule_code = rds.get_code_of_rules_unfixed_returned_cheques_count_of_last_3_months_t29(revised_ch.unfixed_returned_cheques_count_of_last_3_months)
+        rule_code = rds.get_code_of_rules_unfixed_returned_cheques_count_of_last_3_months_t29(get_zero_if_none(revised_ch.unfixed_returned_cheques_count_of_last_3_months))
         revised_user_score = self.calculate_user_score_by_impressing_rule_score(p.score, recent_ch.unfixed_returned_cheques_count_of_last_3_months_score, revised_rule_score)
         self.resolve_and_save_score_change(p.user_id, rule_code, recent_ch.unfixed_returned_cheques_count_of_last_3_months_score, revised_rule_score, revised_user_score)
         # update score values in related entity
@@ -544,9 +558,9 @@ class ScoreCalculationService:
         p.score += revised_rule_score
         print('score= {}, cheques:[unfixed_returned_cheques_count_of_last_3_months-t29]= {}'.format(revised_rule_score, revised_ch.unfixed_returned_cheques_count_of_last_3_months))
 
-        revised_rule_score = rds.get_score_of_rules_unfixed_returned_cheques_count_of_last_5_years_t32(revised_ch.unfixed_returned_cheques_count_of_last_5_years)
+        revised_rule_score = rds.get_score_of_rules_unfixed_returned_cheques_count_of_last_5_years_t32(get_zero_if_none(revised_ch.unfixed_returned_cheques_count_of_last_5_years))
         # handle score change reason
-        rule_code = rds.get_code_of_rules_unfixed_returned_cheques_count_of_last_5_years_t32(revised_ch.unfixed_returned_cheques_count_of_last_5_years)
+        rule_code = rds.get_code_of_rules_unfixed_returned_cheques_count_of_last_5_years_t32(get_zero_if_none(revised_ch.unfixed_returned_cheques_count_of_last_5_years))
         revised_user_score = self.calculate_user_score_by_impressing_rule_score(p.score, recent_ch.unfixed_returned_cheques_count_of_last_5_years_score, revised_rule_score)
         self.resolve_and_save_score_change(p.user_id, rule_code, recent_ch.unfixed_returned_cheques_count_of_last_5_years_score, revised_rule_score, revised_user_score)
         # update score values in related entity
@@ -557,9 +571,9 @@ class ScoreCalculationService:
         p.score += revised_rule_score
         print('score= {}, cheques:[unfixed_returned_cheques_count_of_last_5_years-t32]= {}'.format(revised_rule_score, revised_ch.unfixed_returned_cheques_count_of_last_5_years))
 
-        revised_rule_score = rds.get_score_of_rules_unfixed_returned_cheques_count_of_more_12_months_t31(revised_ch.unfixed_returned_cheques_count_of_more_12_months)
+        revised_rule_score = rds.get_score_of_rules_unfixed_returned_cheques_count_of_more_12_months_t31(get_zero_if_none(revised_ch.unfixed_returned_cheques_count_of_more_12_months))
         # handle score change reason
-        rule_code = rds.get_code_of_rules_unfixed_returned_cheques_count_of_more_12_months_t31(revised_ch.unfixed_returned_cheques_count_of_more_12_months)
+        rule_code = rds.get_code_of_rules_unfixed_returned_cheques_count_of_more_12_months_t31(get_zero_if_none(revised_ch.unfixed_returned_cheques_count_of_more_12_months))
         revised_user_score = self.calculate_user_score_by_impressing_rule_score(p.score, recent_ch.unfixed_returned_cheques_count_of_more_12_months_score, revised_rule_score)
         self.resolve_and_save_score_change(p.user_id, rule_code, recent_ch.unfixed_returned_cheques_count_of_more_12_months_score, revised_rule_score, revised_user_score)
         # update score values in related entity
@@ -571,7 +585,7 @@ class ScoreCalculationService:
         print('score= {}, cheques:[unfixed_returned_cheques_count_of_more_12_months]-t31= {}'.format(revised_rule_score, revised_ch.unfixed_returned_cheques_count_of_more_12_months))
 
         # should be calculate avg_of_all_users_unfixed_returned_cheques_total_balance
-        total_balance_ratio = float(revised_ch.unfixed_returned_cheques_total_balance / ALL_USERS_AVERAGE_UNFIXED_RETURNED_CHEQUES_AMOUNT)
+        total_balance_ratio = float(get_zero_if_none(revised_ch.unfixed_returned_cheques_total_balance) / ALL_USERS_AVERAGE_UNFIXED_RETURNED_CHEQUES_AMOUNT)
         revised_rule_score = rds.get_score_of_rules_unfixed_returned_cheques_total_balance_ratios_v17(total_balance_ratio)
         # handle score change reason
         rule_code = rds.get_code_of_rules_unfixed_returned_cheques_total_balance_ratios_v17(total_balance_ratio)
@@ -586,7 +600,7 @@ class ScoreCalculationService:
         print('score= {}, cheques:[total_balance_ratio-v17]= {}'.format(revised_rule_score, total_balance_ratio))
 
         print('............. cheques score = {} ................'.format(cheques_score))
-        print('... IDENTITIES_SCORE= {} , HISTORIES_SCORE= {}, VOLUMES_SCORE= {}, TIMELINESS_SCORE= {} \n'.format(p.identities_score, p.histories_score, p.volumes_score, p.timeliness_score))
+        self.print_score(p)
         return cheques_score
 
     # normalized score section --------------------------------------------
@@ -636,9 +650,9 @@ class ScoreCalculationService:
         return timeliness_normalized_score
 
     def resolve_and_save_score_change(self, user_id: int, rule_code: str, recent_rule_score: int, revised_rule_score: int, revised_user_score: int):
-        recent_rule_score = get_zero_if_none(recent_rule_score)
-        if revised_rule_score == recent_rule_score:
+        if bool(recent_rule_score) and revised_rule_score == recent_rule_score:
             return
+        recent_rule_score = get_zero_if_none(recent_rule_score)
         rs: ScoreReason = self.ds.get_score_reason_by_rule_code(rule_code)
         ch: ScoreChange = create_new_score_change(user_id, rule_code, (revised_rule_score - recent_rule_score), revised_user_score)
         if revised_rule_score > recent_rule_score:

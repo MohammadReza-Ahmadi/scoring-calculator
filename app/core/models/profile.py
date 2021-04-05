@@ -11,7 +11,7 @@ class Profile(BaseModel):
     has_kyc: bool = False
     has_kyc_score: int = None
 
-    military_service_status: ProfileMilitaryServiceStatusEnum = ProfileMilitaryServiceStatusEnum.FINISHED
+    military_service_status: ProfileMilitaryServiceStatusEnum = ProfileMilitaryServiceStatusEnum.UNKNOWN
     military_service_status_score: int = None
 
     sim_card_ownership: bool = False
