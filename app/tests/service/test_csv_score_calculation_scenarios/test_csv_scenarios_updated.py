@@ -11,7 +11,7 @@ from app.core.models.scoring_enums import ProfileMilitaryServiceStatusEnum
 from app.core.models.undone_trades import UndoneTrade
 from app.core.services.data_service import DataService
 from app.core.services.score_calculation_service import ScoreCalculationService
-from app.core.services.util import is_not_none, is_none_or_zero_float, get_zero_if_none
+from app.core.services.util import is_not_none, get_zero_if_none
 
 
 def read_scenarios_dicts_from_csv(csv_path):
@@ -53,8 +53,7 @@ def calculate_score(scenarios_dicts: [], user_id: int):
         if is_not_none(scn_dict['WeightedAveStars']):
             p.star_count_average = scn_dict['WeightedAveStars']
         recent_p = ds.get_user_profile(user_id)
-        profile_score = cs.calculate_user_profile_score(p=p, recent_p=recent_p)
-        ds.insert_or_update_profile(p, update_flag=recent_p.user_id is not None)
+        cs.calculate_user_profile_score(p=p, recent_p=recent_p)
 
         # DoneTrade Score Calculation ..................................................
         dt = DoneTrade(user_id=user_id)
@@ -76,7 +75,7 @@ def calculate_score(scenarios_dicts: [], user_id: int):
             # todo: 100000000 is fix Denominator that is all_other_users_done_trades_amount, it should be change later
             dt.trades_total_balance = round(float(scn_dict['SDealAmountRatio']) * ALL_USERS_AVERAGE_DEAL_AMOUNT)
         recent_dt = ds.get_user_done_trade(user_id)
-        done_trades_score = cs.calculate_user_done_trades_score(p=p, recent_dt=recent_dt, revised_dt=dt)
+        cs.calculate_user_done_trades_score(p=p, recent_dt=recent_dt, revised_dt=dt)
         ds.insert_or_update_done_trade(dt, update_flag=recent_dt.user_id is not None)
 
         # UndoneTrade Score Calculation ..................................................
@@ -95,7 +94,7 @@ def calculate_score(scenarios_dicts: [], user_id: int):
         if is_not_none(scn_dict['UnfinishedA30Din1YRatio']):
             udt.arrear_trades_total_balance_of_last_year = round(float(scn_dict['UnfinishedA30Din1YRatio']) * dt.trades_total_balance)
         recent_udt = ds.get_user_undone_trade(user_id)
-        undone_trades_score = cs.calculate_user_undone_trades_score(p=p, recent_udt=recent_udt, revised_udt=udt, dt=dt)
+        cs.calculate_user_undone_trades_score(p=p, recent_udt=recent_udt, revised_udt=udt, dt=dt)
         ds.insert_or_update_undone_trade(udt, update_flag=recent_udt.user_id is not None)
 
         # Loan Score Calculation ..................................................
@@ -138,10 +137,11 @@ def calculate_score(scenarios_dicts: [], user_id: int):
         recent_ch = ds.get_user_cheque(user_id)
         cheque_score = cs.calculate_user_cheques_score(p=p, recent_ch=recent_ch, revised_ch=ch)
         ds.insert_or_update_cheque(ch, update_flag=recent_ch.user_id is not None)
+        ds.insert_or_update_profile(p, update_flag=recent_p.user_id is not None)
 
 
 if __name__ == '__main__':
-    csv_file_path = '/home/mohammad-reza/Documents/vsq-docs-live/scoring/SCENARIOS/2-vscore-scenario.csv'
+    csv_file_path = '/home/mohammad-reza/Documents/vsq-docs-live/scoring/SCENARIOS/3-vscore-scenario.csv'
     sen_dict = read_scenarios_dicts_from_csv(csv_file_path)
     user_id = 3
     calculate_score(sen_dict, user_id)

@@ -33,7 +33,7 @@ from app.core.models.undone_trades import UndoneTrade
 from app.core.services.scores_distributions_pipeline_generator import generate_scores_distributions_pipeline
 from app.core.services.util import create_score_status_dto, create_vosouq_status_dto, calculate_dates_diff, \
     create_loan_status_dto, create_cheque_status_dto, \
-    get_zero_if_none, create_score_details_dto, get_second_item, create_score_changes_dto, is_not_none
+    get_zero_if_none, create_score_details_dto, get_second_item, create_score_changes_dto, is_not_none, calculate_dates_diff_by_months_and_days
 from app.core.settings import min_score, max_score, distribution_count
 
 
@@ -330,28 +330,21 @@ class DataService:
             pf.membership_date = date.today()
 
         # calc membership duration
-        membership_duration = calculate_dates_diff(
-            datetime(year=pf.membership_date.year,
-                     month=pf.membership_date.month,
-                     day=pf.membership_date.day),
+        membership_duration = calculate_dates_diff_by_months_and_days(
+            datetime(year=pf.membership_date.year, month=pf.membership_date.month, day=pf.membership_date.day),
             datetime.today())
 
         # load & calc doneTrade
         # load doneTrade
         dt: DoneTrade = self.get_user_done_trade(user_id)
         # calc all doneTrades count
-        dt_count = get_zero_if_none(dt.timely_trades_count_of_last_3_months) + get_zero_if_none(
-            dt.timely_trades_count_between_last_3_to_12_months) \
-                   + get_zero_if_none(dt.past_due_trades_count_of_last_3_months) + get_zero_if_none(
-            dt.past_due_trades_count_between_last_3_to_12_months) \
-                   + get_zero_if_none(dt.arrear_trades_count_of_last_3_months) + get_zero_if_none(
-            dt.arrear_trades_count_between_last_3_to_12_months)
+        dt_count = get_zero_if_none(dt.timely_trades_count_of_last_3_months) + get_zero_if_none(dt.timely_trades_count_between_last_3_to_12_months) \
+                   + get_zero_if_none(dt.past_due_trades_count_of_last_3_months) + get_zero_if_none(dt.past_due_trades_count_between_last_3_to_12_months) \
+                   + get_zero_if_none(dt.arrear_trades_count_of_last_3_months) + get_zero_if_none(dt.arrear_trades_count_between_last_3_to_12_months)
         # calc delayed doneTrades count
         delay_days_avg = 0
         if dt_count > 0:
-            delayed_dt_count = dt_count - (
-                    get_zero_if_none(dt.timely_trades_count_of_last_3_months) + get_zero_if_none(
-                dt.timely_trades_count_between_last_3_to_12_months))
+            delayed_dt_count = dt_count - (get_zero_if_none(dt.timely_trades_count_of_last_3_months) + get_zero_if_none(dt.timely_trades_count_between_last_3_to_12_months))
             # calc delayDays' avg
             delay_days_avg = 0 if delayed_dt_count == 0 else dt.total_delay_days // delayed_dt_count
 
@@ -362,12 +355,15 @@ class DataService:
         # load & calc undoneTrade
         udt: UndoneTrade = self.get_user_undone_trade(user_id)
         # calc all undoneTrades count
-        udt_count = get_zero_if_none(udt.undue_trades_count) + get_zero_if_none(
-            udt.past_due_trades_count) + get_zero_if_none(udt.arrear_trades_count)
+        udt_count = get_zero_if_none(udt.undue_trades_count) + get_zero_if_none(udt.past_due_trades_count) + get_zero_if_none(udt.arrear_trades_count)
 
         # make & return VosouqStatusDTO
-        return create_vosouq_status_dto(membership_duration[DAYS], membership_duration[MONTHS], dt_count,
-                                        udt_count, negative_status_count, delay_days_avg,
+        return create_vosouq_status_dto(membership_duration[DAYS],
+                                        membership_duration[MONTHS],
+                                        dt_count,
+                                        udt_count,
+                                        negative_status_count,
+                                        delay_days_avg,
                                         pf.recommended_to_others_count)
 
     def get_loans_status(self, user_id: int) -> LoansStatusDTO:

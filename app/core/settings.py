@@ -25,5 +25,6 @@ import_rules_flag = True
 min_score = 0
 max_score = 1000
 distribution_count = 30
+initial_score_change_store_config = False
 
 # max long value in java: 9223372036854775807

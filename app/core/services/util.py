@@ -132,6 +132,22 @@ def create_score_changes_dto(sch: ScoreChange) -> ScoreChangeDTO:
     return scd
 
 
+def calculate_dates_diff_by_day(start: datetime, end: datetime) -> int:
+    if end is None or start is None or end <= start:
+        return ZERO
+    d = (end - start)
+    return d.days
+
+
+def calculate_dates_diff_by_months_and_days(start: datetime, end: datetime) -> {}:
+    if end is None or start is None or end <= start:
+        return {YEARS: ZERO, MONTHS: ZERO, DAYS: ZERO}
+    d = (end - start)
+    mns = d.days // 30
+    dys = d.days - (mns * 30)
+    return {MONTHS: mns, DAYS: dys}
+
+
 def calculate_dates_diff(start: datetime, end: datetime) -> {}:
     if end is None or start is None or end <= start:
         return {YEARS: ZERO, MONTHS: ZERO, DAYS: ZERO}

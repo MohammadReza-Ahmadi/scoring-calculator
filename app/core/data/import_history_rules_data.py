@@ -102,7 +102,7 @@ def import_rules_history_done_timely_trades_of_last_3_months_h6(ds: DataService)
     rule_codes.append(rule.code)
 
     # Last3MSD ≥ 4	40	H0605P40	کاربر در سه ماه گذشته بیش از 3 تعامل موفق با سایر کاربران داشته است
-    rule = create_new_rule(3, 'H6', 'H0605P40', 'کاربر در سه ماه گذشته بیش از 3 تعامل موفق با سایر کاربران داشته است', 4.44, 40, 4, 4)
+    rule = create_new_rule(3, 'H6', 'H0605P40', 'کاربر در سه ماه گذشته بیش از 3 تعامل موفق با سایر کاربران داشته است', 4.44, 40, 4, 999)
     ds.insert_rule(rule)
     print('Histories(H) done_timely_trades_of_last_3_months_h6 rules are created.')
     ds.delete_score_reasons({RULE_MASTER_CODE: H6_RULES_DONE_TIMELY_TRADES_OF_LAST_3_MONTHS})

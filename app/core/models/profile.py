@@ -32,11 +32,11 @@ class Profile(BaseModel):
     star_count_average: int = None
     star_count_average_score: int = None
 
-    score: int = None
-    identities_score: int = None
-    histories_score: int = None
-    volumes_score: int = None
-    timeliness_score: int = None
+    score: int = 0
+    identities_score: int = 0
+    histories_score: int = 0
+    volumes_score: int = 0
+    timeliness_score: int = 0
 
     # class Config:
     #     orm_mode = True
