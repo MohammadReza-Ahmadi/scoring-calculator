@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date
 
 from pydantic import BaseModel
 
@@ -37,6 +37,7 @@ class Profile(BaseModel):
     histories_score: int = 0
     volumes_score: int = 0
     timeliness_score: int = 0
+    last_score_change: int = 0
 
     # class Config:
     #     orm_mode = True
@@ -47,4 +48,3 @@ class Profile(BaseModel):
     #     banana='yellow',
     #     __base__=FooModel,
     # )
-

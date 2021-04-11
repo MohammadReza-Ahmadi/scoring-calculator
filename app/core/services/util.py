@@ -25,8 +25,18 @@ from app.core.models.score_reasons import ScoreReason
 from app.core.settings import max_score
 
 
-def create_new_rule(level, parent: str, code: str, title: str, impact_percent: float, score: int = None,
-                    min_val: float = None, max_val: float = None):
+def create_revised_profile(user_id: int, recent_p: Profile):
+    p = Profile()
+    p.user_id = user_id
+    p.identities_score = recent_p.identities_score
+    p.histories_score = recent_p.histories_score
+    p.timeliness_score = recent_p.timeliness_score
+    p.volumes_score = recent_p.volumes_score
+    p.score = recent_p.score
+    return p
+
+
+def create_new_rule(level, parent: str, code: str, title: str, impact_percent: float, score: int = None, min_val: float = None, max_val: float = None):
     rule = Rule()
     rule.level = level
     rule.parent = parent
