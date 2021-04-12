@@ -140,7 +140,7 @@ def calculate_score(scenarios_dicts: [], user_id: int):
 
 
 if __name__ == '__main__':
-    csv_file_path = '/home/mohammad-reza/Documents/vsq-docs-live/scoring/SCENARIOS/4-vscore-scenario.csv'
+    csv_file_path = '/home/mohammad-reza/Documents/vsq-docs-live/scoring/SCENARIOS/3-vscore-scenario.csv'
     sen_dict = read_scenarios_dicts_from_csv(csv_file_path)
-    user_id = 3
+    user_id = 2
     calculate_score(sen_dict, user_id)

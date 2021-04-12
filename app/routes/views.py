@@ -7,11 +7,12 @@ from app.core.data.caching.redis_caching import RedisCaching
 from app.core.models.dtos.cheque_status_dto import ChequesStatusDTO
 from app.core.models.dtos.loan_status_dto import LoansStatusDTO
 from app.core.models.dtos.score_boundaries_dto import ScoreBoundariesDTO
-from app.core.models.dtos.score_time_series_dto import ScoreTimeSeriesDTO
+from app.core.models.dtos.score_change_dto import ScoreChangeDTO
 from app.core.models.dtos.score_details_dto import ScoreDetailsDTO
 from app.core.models.dtos.score_distribution_dto import ScoreDistributionDTO
-from app.core.models.dtos.score_change_dto import ScoreChangeDTO
 from app.core.models.dtos.score_status_dto import ScoreStatusDTO
+from app.core.models.dtos.score_time_series_dto import ScoreTimeSeriesDTO
+from app.core.models.dtos.user_score_dto import UserScoreDTO
 from app.core.models.dtos.vosouq_status_dto import VosouqStatusDTO
 from app.core.models.score_gauges import ScoreGauge
 from app.core.services.data_service import DataService
@@ -80,3 +81,9 @@ async def get_score_distributions():
 @router.get("/score-changes/{userId}", response_model=List[ScoreChangeDTO])
 async def get_score_changes(userId: int):
     return ds.get_score_changes(userId)
+
+
+# noinspection PyPep8Naming
+@router.post("/scores", response_model=List[UserScoreDTO])
+async def get_users_scores(userIds: List[int]):
+    return ds.get_users_scores(userIds)

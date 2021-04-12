@@ -21,6 +21,7 @@ from app.core.models.dtos.score_details_dto import ScoreDetailsDTO
 from app.core.models.dtos.score_distribution_dto import ScoreDistributionDTO
 from app.core.models.dtos.score_status_dto import ScoreStatusDTO
 from app.core.models.dtos.score_time_series_dto import ScoreTimeSeriesDTO
+from app.core.models.dtos.user_score_dto import UserScoreDTO
 from app.core.models.dtos.vosouq_status_dto import VosouqStatusDTO
 from app.core.models.loans import Loan
 from app.core.models.profile import Profile
@@ -31,8 +32,7 @@ from app.core.models.score_reasons import ScoreReason
 from app.core.models.score_time_series import ScoreTimeSeries
 from app.core.models.undone_trades import UndoneTrade
 from app.core.services.scores_distributions_pipeline_generator import generate_scores_distributions_pipeline
-from app.core.services.util import create_score_status_dto, create_vosouq_status_dto, calculate_dates_diff, \
-    create_loan_status_dto, create_cheque_status_dto, \
+from app.core.services.util import create_score_status_dto, create_vosouq_status_dto, create_loan_status_dto, create_cheque_status_dto, \
     get_zero_if_none, create_score_details_dto, get_second_item, create_score_changes_dto, is_not_none, calculate_dates_diff_by_months_and_days
 from app.core.settings import min_score, max_score, distribution_count
 
@@ -76,12 +76,12 @@ class DataService:
         return self.db.rules.find()
 
     def get_master_rules(self) -> [Rule]:
-        dic: Cursor = self.db.rules.find({CODE: {'$in': [IDENTITIES, HISTORIES, VOLUMES, TIMELINESS]}})
-        if dic is None:
+        r_cursor: Cursor = self.db.rules.find({CODE: {'$in': [IDENTITIES, HISTORIES, VOLUMES, TIMELINESS]}})
+        if r_cursor is None:
             return []
         rules: [Rule] = []
-        while dic.alive:
-            rules.append(Rule.parse_obj(dic.next()))
+        while r_cursor.alive:
+            rules.append(Rule.parse_obj(r_cursor.next()))
         return rules
 
     def delete_rules(self, filter_dict: {}) -> None:
@@ -134,7 +134,17 @@ class DataService:
             return Profile()
         return Profile.parse_obj(dic)
 
-    # DONE-TRADE SERVICES ................................................
+    def get_users_profiles(self, user_ids: [int]):
+        if user_ids is None or len(user_ids) == ZERO:
+            raise ScoringException(4, 'user_ids can not be Empty!')
+        p_cursor = self.db.profiles.find({USER_ID: {'$in': user_ids}})
+        profiles: [Profile] = []
+        while p_cursor.alive:
+            profiles.append(Profile.parse_obj(p_cursor.next()))
+        return profiles
+
+        # DONE-TRADE SERVICES ................................................
+
     def insert_done_trade(self, dt: DoneTrade):
         self.db.doneTrades.insert_one(dict(dt))
 
@@ -415,3 +425,12 @@ class DataService:
         for sch in score_changes:
             scr_dtos.append(create_score_changes_dto(sch))
         return scr_dtos
+
+    def get_users_scores(self, user_ids: [int]) -> List[UserScoreDTO]:
+        if user_ids is None or len(user_ids) == ZERO:
+            raise ScoringException(4, 'user_ids can not be Empty!')
+        profiles: [Profile] = self.get_users_profiles(user_ids)
+        usr_scr_dtos: [UserScoreDTO] = []
+        for p in profiles:
+            usr_scr_dtos.append(UserScoreDTO(user_id=p.user_id, score=p.score))
+        return usr_scr_dtos
